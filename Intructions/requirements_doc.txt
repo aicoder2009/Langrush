@@ -1,0 +1,170 @@
+# Requirements Document: Language Speedrun Game
+
+## 1. Project Overview
+A web-based speedrunning game where players identify languages from text samples as quickly as possible, competing for best times and accuracy. Similar to Wordle in its accessibility and shareability - simple, clean interface that can be accessed instantly via browser with shareable results.
+
+## 2. Functional Requirements
+
+### 2.1 Core Gameplay
+- **FR-1.1**: System shall display text samples in various languages
+- **FR-1.2**: System shall provide a text input bar for language guessing
+- **FR-1.3**: System shall offer autocomplete suggestions as user types
+- **FR-1.4**: System shall provide real-time timer display showing elapsed time
+- **FR-1.5**: System shall track player accuracy and completion times
+- **FR-1.6**: System shall validate typed answer against correct language name
+- **FR-1.7**: System shall accept various language name formats (e.g., "Spanish", "spanish", "spa")
+- **FR-1.8**: System shall allow Enter key to submit answer
+
+### 2.2 Game Modes
+- **FR-2.1**: Sprint Mode - 10 languages, track completion time
+- **FR-2.2**: Time Attack - 60-second countdown, maximize correct answers
+- **FR-2.3**: Endless Mode - Continue until 3 incorrect answers
+- **FR-2.4**: Perfect Run - 20 languages, one mistake ends game
+
+### 2.3 Language Database
+- **FR-3.1**: System shall support minimum 20 languages
+- **FR-3.2**: Each language shall have at least 5 diverse text samples
+- **FR-3.3**: Text samples should include proverbs, common phrases, or cultural expressions
+- **FR-3.4**: System shall randomize language selection
+- **FR-3.5**: System shall randomize answer option order
+- **FR-3.6**: System shall not repeat languages within a single game session
+
+### 2.4 Scoring & Statistics
+- **FR-4.1**: System shall calculate and display accuracy percentage
+- **FR-4.2**: System shall track personal best times per game mode
+- **FR-4.3**: System shall calculate languages identified per minute (LPM)
+- **FR-4.4**: System shall persist statistics to browser local storage
+- **FR-4.5**: System shall display end-game statistics summary
+- **FR-4.6**: System shall show running streak counter
+
+### 2.5 Results Sharing (Wordle-style)
+- **FR-5.1**: System shall generate shareable text-based results
+- **FR-5.2**: Results shall include: mode, time, accuracy, and emoji indicators
+- **FR-5.3**: System shall provide "Copy Results" button
+- **FR-5.4**: Results format shall be social-media friendly
+- **FR-5.5**: Results shall not spoil specific languages for others
+
+### 2.6 User Interface
+- **FR-6.1**: System shall display clean, minimalist web interface (Wordle-style)
+- **FR-6.2**: System shall show current question number and progress bar
+- **FR-6.3**: System shall display timer prominently (MM:SS.ms format)
+- **FR-6.4**: System shall show lives/strikes with visual indicators
+- **FR-6.5**: System shall provide centered text input bar with focus on load
+- **FR-6.6**: System shall show autocomplete dropdown below input
+- **FR-6.7**: System shall display correct answer with brief feedback animation after submission
+- **FR-6.8**: System shall include mode selection screen
+- **FR-6.9**: System shall be fully responsive (mobile and desktop)
+- **FR-6.10**: System shall auto-clear input field after each answer
+
+### 2.7 Game Controls
+- **FR-7.1**: System shall support pause/resume functionality
+- **FR-7.2**: System shall allow returning to mode selection
+- **FR-7.3**: System shall support replay/new game after completion
+- **FR-7.4**: System shall provide visual feedback for correct/incorrect answers
+- **FR-7.5**: System shall support keyboard navigation (Tab, Enter, Escape)
+- **FR-7.6**: System shall support autocomplete navigation with arrow keys
+- **FR-7.7**: System shall accept partial matches if unambiguous (e.g., "span" for "Spanish")
+- **FR-7.8**: System shall provide hint button (optional, with time penalty)
+
+### 2.8 Accessibility
+- **FR-8.1**: System shall work without internet after initial load
+- **FR-8.2**: System shall display Unicode text correctly
+- **FR-8.3**: System shall be playable on mobile devices
+- **FR-8.4**: System shall support dark/light theme toggle
+
+## 3. Non-Functional Requirements
+
+### 3.1 Performance
+- **NFR-1.1**: Timer shall update with millisecond precision
+- **NFR-1.2**: UI interactions shall respond within 50ms
+- **NFR-1.3**: Initial page load shall complete within 2 seconds
+- **NFR-1.4**: Animations shall run at 60fps
+
+### 3.2 Usability
+- **NFR-2.1**: Interface shall be intuitive for first-time users
+- **NFR-2.2**: No tutorial required for basic gameplay
+- **NFR-2.3**: Game shall work in all modern browsers
+- **NFR-2.4**: Font rendering shall ensure all languages are readable
+
+### 3.3 Reliability
+- **NFR-3.1**: Game shall handle unexpected inputs without crashing
+- **NFR-3.2**: Data persistence shall not corrupt existing scores
+- **NFR-3.3**: System shall function offline after initial load
+
+### 3.4 Portability
+- **NFR-4.1**: Game shall run on Chrome, Firefox, Safari, Edge
+- **NFR-4.2**: Game shall work on iOS and Android browsers
+- **NFR-4.3**: Game shall require no installation or downloads
+- **NFR-4.4**: Game shall be accessible via simple URL
+
+### 3.5 Maintainability
+- **NFR-5.1**: Code shall be modular and well-documented
+- **NFR-5.2**: Language database shall be easily extensible
+- **NFR-5.3**: Game modes shall follow consistent interface pattern
+
+## 4. Language Coverage Requirements
+Minimum supported languages (expandable):
+1. Spanish
+2. French
+3. German
+4. Japanese
+5. Mandarin Chinese
+6. Korean
+7. Arabic
+8. Russian
+9. Portuguese
+10. Italian
+11. Hindi
+12. Dutch
+13. Swedish
+14. Polish
+15. Turkish
+16. Vietnamese
+17. Thai
+18. Greek
+19. Hebrew
+20. Swahili
+21. Indonesian
+22. Finnish
+23. Czech
+24. Romanian
+
+## 5. Data Requirements
+- **DR-1**: Statistics stored in browser localStorage
+- **DR-2**: Data persists across sessions
+- **DR-3**: Language samples embedded in application code
+- **DR-4**: Support for data export/import (future)
+
+## 6. Shareable Results Format Example
+```
+🌍 Language Sprint 🏃
+⏱️ 00:45.23 | ✅ 9/10 (90%)
+🔥 Streak: 5
+
+✅✅✅❌✅✅✅✅✅✅
+
+Play at: [URL]
+```
+
+## 7. Constraints
+- Web-based interface (HTML/CSS/JS or React)
+- No audio/sound effects (visual feedback only)
+- No backend server required
+- Single-player only
+- Must work in standard browser window
+- No authentication required
+
+## 8. Technology Recommendations
+- **Frontend**: React component for interactivity
+- **Styling**: Tailwind CSS for Wordle-like aesthetic
+- **Storage**: localStorage API
+- **Hosting**: Static site (GitHub Pages, Netlify, Vercel)
+
+## 9. Future Enhancements (Out of Scope for v1.0)
+- Daily challenge mode (same languages for everyone)
+- Global leaderboards
+- Difficulty levels (script vs romanized text)
+- Custom language packs
+- Multiplayer race mode
+- Achievement badges
+- Language learning hints/explanations

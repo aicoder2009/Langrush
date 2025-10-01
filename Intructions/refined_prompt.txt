@@ -1,0 +1,177 @@
+# Language Speedrun Game - Development Prompt
+
+## Project Overview
+Build a Wordle-style web game where players speedrun identifying languages by typing the language name. The game features a clean, minimalist interface with a typing input bar and autocomplete suggestions.
+
+## Core Features
+
+### Gameplay Mechanics
+- Display text samples in various languages (20+ languages minimum)
+- Player types the language name into a text input field
+- Autocomplete dropdown shows suggestions as they type (max 5 suggestions)
+- Arrow keys navigate suggestions, Enter submits answer
+- Real-time timer tracking with millisecond precision
+- Immediate visual feedback (green for correct, red shake for incorrect)
+- Multiple answer formats accepted (e.g., "Spanish", "spanish", "español", "spa")
+
+### Game Modes
+1. **Sprint Mode**: Identify 10 languages as fast as possible
+2. **Time Attack**: 60-second countdown, identify as many as possible
+3. **Endless Mode**: Continue until 3 incorrect answers (strikes)
+4. **Perfect Run**: Identify 20 languages, one mistake ends the game
+
+### User Interface Requirements
+- **Wordle-inspired aesthetic**: Clean, minimal, card-based design
+- **Main screen**: Display language text sample (large, centered)
+- **Input section**: Focused text input with autocomplete dropdown below
+- **Header**: Timer, question number/progress, lives indicator (❤️)
+- **Results screen**: Statistics, visual grid of ✅/❌, share button
+- **Home screen**: Mode selection cards with personal bests displayed
+- Auto-focus input field after each question
+- Auto-clear input after submission
+- Smooth transitions and animations (250-300ms)
+
+### Technical Stack
+- **Framework**: React with Vite
+- **Styling**: Tailwind CSS
+- **State Management**: React hooks (useState, useEffect, useContext)
+- **Storage**: Browser localStorage for scores/stats
+- **Deployment**: Static hosting (Vercel/Netlify ready)
+
+## Language Database Structure
+Each language should include:
+```javascript
+{
+  code: 'es',
+  name: 'Spanish',
+  acceptableAnswers: ['spanish', 'español', 'spa', 'es'],
+  samples: [
+    'Text sample 1',
+    'Text sample 2',
+    // 5+ samples per language
+  ]
+}
+```
+
+**Required languages** (minimum 20):
+Spanish, French, German, Japanese, Mandarin Chinese, Korean, Arabic, Russian, Portuguese, Italian, Hindi, Dutch, Swedish, Polish, Turkish, Vietnamese, Thai, Greek, Hebrew, Swahili, Indonesian, Finnish, Czech, Romanian
+
+## Key Functionality
+
+### Autocomplete System
+- Filter languages as user types (starts-with matching)
+- Show top 5 most relevant matches
+- Arrow key navigation (up/down)
+- Tab key to select first suggestion
+- Click to select from dropdown
+- Fuzzy matching support (optional enhancement)
+
+### Timer System
+- Display format: MM:SS.ms (e.g., 00:45.23)
+- Update every 10ms for precision
+- Pause/resume capability
+- Count up for Sprint/Endless/Perfect modes
+- Count down for Time Attack mode
+
+### Score Persistence
+Store in localStorage:
+- Personal best times per mode
+- High scores (for Time Attack/Endless)
+- Total games played
+- Current streak
+- Last played date
+
+### Shareable Results (Wordle-style)
+Format:
+```
+🌍 Language Sprint 🏃
+⏱️ 00:45.23 | ✅ 9/10 (90%)
+
+✅✅✅❌✅✅✅✅✅✅
+
+Play at: [URL]
+```
+
+## Component Structure
+```
+App
+├── HomePage (mode selection)
+├── GameScreen
+│   ├── Timer
+│   ├── ProgressBar
+│   ├── LivesIndicator
+│   ├── QuestionDisplay
+│   └── AnswerInput
+│       └── AutocompleteDropdown
+└── ResultsScreen
+```
+
+## User Experience Flow
+1. **Home**: User selects game mode → sees personal bests
+2. **Game Start**: Timer starts, first question displays, input auto-focused
+3. **Answering**: User types → sees autocomplete → submits with Enter
+4. **Feedback**: Visual indication (green flash or red shake) → brief delay
+5. **Next Question**: Input clears, next question fades in, input refocuses
+6. **Game End**: Transition to results screen after 1.5s delay
+7. **Results**: Show stats, visual grid, share button, play again/menu options
+
+## Validation & Error Handling
+- Accept case-insensitive answers
+- Trim whitespace from input
+- Support multiple language name variations
+- Handle Unicode text properly (for non-Latin scripts)
+- Graceful localStorage failure handling
+- Prevent duplicate language selection in single game
+
+## Responsive Design
+- Desktop: Centered layout, max-width container
+- Tablet: Optimized spacing and touch targets
+- Mobile: Single column, larger input field, full-width buttons
+- All breakpoints maintain readability and usability
+
+## Performance Requirements
+- Initial load < 2 seconds
+- Input response time < 50ms
+- Smooth 60fps animations
+- No layout shifts during gameplay
+- Efficient re-renders (use React.memo where appropriate)
+
+## Accessibility Considerations
+- Keyboard-only navigation support
+- Proper focus management
+- ARIA labels for screen readers
+- High contrast text (WCAG AA compliant)
+- Focus indicators on interactive elements
+
+## Implementation Priority
+1. ✅ Basic game loop with typing input
+2. ✅ Autocomplete functionality
+3. ✅ Timer and scoring
+4. ✅ All 4 game modes
+5. ✅ Results screen with sharing
+6. ✅ localStorage persistence
+7. ✅ Responsive design
+8. ✅ Polish and animations
+
+## Success Criteria
+- User can complete a full game in any mode
+- Autocomplete provides helpful suggestions
+- Timer is accurate and visible
+- Scores persist across sessions
+- Results are shareable
+- Interface is intuitive without tutorial
+- Game works on mobile and desktop
+- Load time and performance are acceptable
+
+## Out of Scope (Future Enhancements)
+- Sound effects
+- Daily challenge mode
+- Global leaderboards
+- Multiplayer
+- Language learning hints
+- Achievement system
+- Difficulty levels
+
+---
+
+**Start by building the core game loop with Sprint mode, then add remaining modes and features iteratively.**

@@ -1,0 +1,499 @@
+# Design Document: Language Speedrun Game
+
+## 1. System Architecture
+
+### 1.1 High-Level Architecture
+```
+┌─────────────────────────────────────────────────┐
+│         Web Application (React)                 │
+├─────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────────────────┐│
+│  │  App.jsx     │  │   GameStateManager       ││
+│  │  (Router)    │  │   (Context/Hooks)        ││
+│  └──────────────┘  └──────────────────────────┘│
+├─────────────────────────────────────────────────┤
+│              Component Layer                    │
+│  ┌──────────────────────────────────────────┐  │
+│  │  Pages/Screens                           │  │
+│  │  - HomePage (Mode Selection)             │  │
+│  │  - GameScreen (Active Game)              │  │
+│  │  - ResultsScreen (End Game Stats)        │  │
+│  └──────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────┐  │
+│  │  Game Components                         │  │
+│  │  - Timer                                 │  │
+│  │  - QuestionDisplay                       │  │
+│  │  - AnswerButtons                         │  │
+│  │  - ProgressBar                           │  │
+│  │  - LivesIndicator                        │  │
+│  │  - FeedbackAnimation                     │  │
+│  └──────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────┤
+│              Logic Layer                        │
+│  ┌──────────────────────────────────────────┐  │
+│  │  Game Modes                              │  │
+│  │  - SprintMode                            │  │
+│  │  - TimeAttackMode                        │  │
+│  │  - EndlessMode                           │  │
+│  │  - PerfectRunMode                        │  │
+│  └──────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────┐  │
+│  │  Core Services                           │  │
+│  │  - LanguageDatabase                      │  │
+│  │  - ScoreManager                          │  │
+│  │  - TimerService                          │  │
+│  │  - ResultsFormatter                      │  │
+│  └──────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────┤
+│              Data Layer                         │
+│  ┌──────────────────────────────────────────┐  │
+│  │  localStorage Manager                    │  │
+│  │  - Personal Bests                        │  │
+│  │  - Statistics                            │  │
+│  │  - Preferences (theme, etc)              │  │
+│  └──────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘
+```
+
+### 1.2 Technology Stack
+- **Frontend Framework**: React with Hooks
+- **Styling**: Tailwind CSS
+- **State Management**: React Context API + useState/useReducer
+- **Storage**: Browser localStorage API
+- **Build Tool**: Vite or Create React App
+- **Deployment**: Static hosting (Vercel/Netlify)
+
+## 2. Component Design
+
+### 2.1 Core Components
+
+#### HomePage Component
+```
+Purpose: Mode selection and statistics overview
+Props: None
+State: 
+  - personalBests (from localStorage)
+  - currentStreak
+Elements:
+  - Game logo/title
+  - Mode selection cards (4 modes)
+  - Personal best times display
+  - Settings icon (theme toggle)
+  - How to Play button
+```
+
+#### GameScreen Component
+```
+Purpose: Main gameplay interface
+Props: 
+  - mode (sprint|timeattack|endless|perfect)
+State:
+  - currentQuestion
+  - userInput (typed answer)
+  - autocompleteSuggestions
+  - score
+  - lives/strikes
+  - gameStatus
+  - startTime
+Elements:
+  - Timer display
+  - Progress bar
+  - Lives indicator
+  - Question text (large, centered)
+  - Text input bar (focused, autocomplete)
+  - Submit button (or Enter key)
+  - Pause button
+```
+
+#### ResultsScreen Component
+```
+Purpose: End-game statistics and sharing
+Props:
+  - finalTime
+  - accuracy
+  - mode
+  - detailedResults (array)
+State:
+  - copied (for copy feedback)
+Elements:
+  - Summary stats card
+  - Detailed round-by-round results
+  - Share results button
+  - Play again button
+  - Return to menu button
+```
+
+#### Timer Component
+```
+Purpose: Display and manage game timer
+Props:
+  - isRunning
+  - mode (countdown vs countup)
+  - initialTime
+State:
+  - currentTime
+Features:
+  - Millisecond precision
+  - Color changes based on urgency
+  - Pause/resume support
+```
+
+#### QuestionDisplay Component
+```
+Purpose: Show language text sample
+Props:
+  - text
+  - questionNumber
+  - totalQuestions
+Features:
+  - Large, readable font
+  - Proper Unicode rendering
+  - Smooth transitions between questions
+```
+
+#### AnswerInput Component
+```
+Purpose: Text input for typing language guess
+Props:
+  - onSubmit (callback)
+  - disabled (during feedback)
+  - correctAnswer (for feedback)
+  - languageList (for autocomplete)
+State:
+  - inputValue
+  - suggestions (filtered)
+  - selectedSuggestion (for keyboard nav)
+Features:
+  - Autocomplete dropdown
+  - Keyboard support (Enter to submit, arrows for suggestions)
+  - Visual feedback (correct/incorrect)
+  - Auto-focus and auto-clear
+  - Fuzzy matching for suggestions
+  - Animation on submission
+```
+
+### 2.2 Component Hierarchy
+```
+App
+├── HomePage
+│   ├── ModeCard (x4)
+│   ├── StatsDisplay
+│   └── SettingsButton
+├── GameScreen
+│   ├── Timer
+│   ├── ProgressBar
+│   ├── LivesIndicator
+│   ├── QuestionDisplay
+│   ├── AnswerInput
+│   │   └── AutocompleteDropdown
+│   └── PauseOverlay
+└── ResultsScreen
+    ├── StatsSummary
+    ├── RoundDetails
+    └── ShareButton
+```
+
+## 3. Data Models
+
+### 3.1 Language Sample
+```javascript
+{
+  language: "Spanish",
+  text: "El que mucho abarca, poco aprieta",
+  category: "proverb" | "phrase" | "quote"
+}
+```
+
+### 3.2 Question
+```javascript
+{
+  id: number,
+  text: string,
+  correctAnswer: string,
+  acceptableAnswers: string[], // variations: ["Spanish", "spanish", "español", "spa"]
+  timestamp: number
+}
+```
+
+### 3.3 Game State
+```javascript
+{
+  mode: "sprint" | "timeattack" | "endless" | "perfect",
+  status: "menu" | "playing" | "paused" | "finished",
+  currentQuestionIndex: number,
+  questions: Question[],
+  answers: Answer[],
+  lives: number,
+  startTime: number,
+  endTime: number | null,
+  isPaused: boolean
+}
+```
+
+### 3.4 Answer Record
+```javascript
+{
+  questionId: number,
+  userAnswer: string,
+  correctAnswer: string,
+  isCorrect: boolean,
+  timeSpent: number // milliseconds
+}
+```
+
+### 3.5 Personal Bests (localStorage)
+```javascript
+{
+  sprint: {
+    bestTime: number,
+    bestAccuracy: number,
+    gamesPlayed: number
+  },
+  timeattack: {
+    highScore: number,
+    gamesPlayed: number
+  },
+  endless: {
+    highScore: number,
+    gamesPlayed: number
+  },
+  perfect: {
+    bestTime: number,
+    completions: number,
+    gamesPlayed: number
+  },
+  currentStreak: number,
+  totalGamesPlayed: number,
+  lastPlayed: string // ISO date
+}
+```
+
+## 4. Game Flow & State Management
+
+### 4.1 Game Flow Diagram
+```
+[Menu] → [Select Mode] → [Game Initialize]
+                              ↓
+                        [Load Question]
+                              ↓
+                        [Display Q&A]
+                              ↓
+                        [User Selects] → [Correct?]
+                              ↓              ↓
+                        [Show Feedback] ← Yes/No
+                              ↓
+                        [More Questions?]
+                         Yes ↓    ↓ No
+                    [Next Q]  [Results Screen]
+                                   ↓
+                            [Share/Play Again]
+```
+
+### 4.2 State Transitions
+```
+MENU → PLAYING: User selects mode
+PLAYING → PAUSED: User clicks pause
+PAUSED → PLAYING: User resumes
+PLAYING → FINISHED: Game ends (completed/failed)
+FINISHED → MENU: Return to menu
+FINISHED → PLAYING: Play again (new game)
+```
+
+## 5. Algorithm Design
+
+### 5.1 Question Generation
+```
+function generateQuestions(mode, languageDB) {
+  1. Determine question count based on mode
+  2. Randomly select N unique languages
+  3. For each language:
+     a. Randomly select one text sample
+     b. Build acceptable answers list (various formats)
+     c. Create Question object
+  4. Return Question array
+}
+```
+
+### 5.2 Answer Validation
+```
+function validateAnswer(question, userInput) {
+  1. Normalize userInput (lowercase, trim)
+  2. Check if normalized input matches any acceptableAnswers
+  3. Support fuzzy matching for typos (optional)
+  4. Record time taken for this question
+  5. Update score/lives based on correctness
+  6. Trigger appropriate feedback animation
+  7. Return validation result
+}
+```
+
+### 5.3 Autocomplete Algorithm
+```
+function getAutocompleteSuggestions(input, languageList) {
+  1. Normalize input (lowercase, trim)
+  2. Filter languageList where name starts with input
+  3. Sort by relevance (exact match first, then alphabetical)
+  4. Limit to top 5 suggestions
+  5. Return filtered suggestions
+}
+```
+
+### 5.4 Score Calculation
+```
+function calculateScore(answers) {
+  correctCount = count(answers where isCorrect)
+  totalTime = sum(answers.timeSpent)
+  accuracy = (correctCount / totalAnswers) * 100
+  lpm = (correctCount / totalTime) * 60000 // per minute
+  
+  return {
+    correctCount,
+    totalTime,
+    accuracy,
+    lpm
+  }
+}
+```
+
+### 5.5 Results Formatting (Wordle-style)
+```
+function formatShareableResults(gameData) {
+  emoji = determineEmoji(accuracy, time)
+  checkmarks = answers.map(a => a.isCorrect ? "✅" : "❌").join("")
+  
+  return `
+    🌍 Language ${modeName} ${emoji}
+    ⏱️ ${formatTime(time)} | ✅ ${correct}/${total} (${accuracy}%)
+    🔥 Streak: ${streak}
+    
+    ${checkmarks}
+    
+    Play at: [URL]
+  `
+}
+```
+
+## 6. UI/UX Design Principles
+
+### 6.1 Visual Design
+- **Color Palette**: Wordle-inspired minimal palette
+  - Primary: Deep blue/teal for brand
+  - Correct: Green (#6aaa64)
+  - Incorrect: Gray/Red (#787c7e)
+  - Background: Clean white (light) / Dark gray (dark mode)
+- **Typography**: 
+  - Headlines: Bold, sans-serif
+  - Question text: Large (24-32px), high contrast
+  - Answers: Medium (18-20px), readable
+- **Spacing**: Generous whitespace, card-based layout
+- **Animations**: Subtle, smooth (200-300ms transitions)
+
+### 6.2 Layout Design
+```
+┌─────────────────────────────────────┐
+│           LANGUAGE SPRINT           │
+├─────────────────────────────────────┤
+│  Timer: 00:23.45    [❤️❤️❤️] 3/10  │
+├─────────────────────────────────────┤
+│                                     │
+│     "Hola, ¿cómo estás?"           │
+│                                     │
+├─────────────────────────────────────┤
+│  ┌─────────────────────────────┐   │
+│  │ Type language name...       │   │
+│  └─────────────────────────────┘   │
+│  ┌─────────────────────────────┐   │
+│  │ Spanish                     │   │ Autocomplete
+│  │ Swahili                     │   │ dropdown
+│  └─────────────────────────────┘   │
+│                                     │
+│         [Enter to submit]           │
+└─────────────────────────────────────┘
+```
+
+### 6.3 Interaction Patterns
+- **Input Focus**: Subtle glow/border highlight
+- **Typing**: Autocomplete dropdown appears after 1 character
+- **Arrow Keys**: Navigate autocomplete suggestions (highlight)
+- **Enter/Click**: Submit answer
+- **Correct Answer**: Green flash around input, checkmark animation, brief delay, then next question
+- **Incorrect Answer**: Red shake on input, show correct answer below, brief delay, then next question
+- **Autocomplete Select**: Tab or click to select suggestion
+- **Transition**: Fade out → Clear input → Fade in new question (250ms)
+
+### 6.4 Responsive Breakpoints
+- **Mobile** (<640px): Single column, larger touch targets
+- **Tablet** (640-1024px): Optimized grid, comfortable sizing
+- **Desktop** (>1024px): Centered content, max-width container
+
+## 7. Storage Schema
+
+### 7.1 localStorage Keys
+```
+langspeed_stats: Personal bests and statistics
+langspeed_prefs: User preferences (theme, etc)
+langspeed_streak: Current streak data
+```
+
+### 7.2 Data Persistence Strategy
+- Auto-save after each game completion
+- Update streak on daily play
+- Clear old data after 90 days of inactivity
+- Export/import functionality for backup
+
+## 8. Performance Considerations
+
+### 8.1 Optimization Strategies
+- Preload all language data on app mount
+- Use React.memo for static components
+- Debounce localStorage writes
+- Optimize re-renders with proper dependency arrays
+- Lazy load results screen
+
+### 8.2 Bundle Size Management
+- Tree-shake unused Tailwind classes
+- Minimize dependencies
+- Code split by route if needed
+- Compress assets
+
+## 9. Accessibility
+
+### 9.1 Keyboard Navigation
+- Tab to focus input field
+- Type to enter guess
+- Arrow keys (↑/↓) to navigate autocomplete
+- Enter to submit answer
+- Escape to pause/menu
+- Auto-focus on input after each question
+
+### 9.2 Screen Reader Support
+- Proper ARIA labels
+- Announce question changes
+- Announce timer at intervals
+- Describe feedback states
+
+### 9.3 Visual Accessibility
+- High contrast mode support
+- Configurable font sizes
+- Color-blind friendly feedback (icons + colors)
+- Focus indicators on all interactive elements
+
+## 10. Testing Strategy
+
+### 10.1 Unit Tests
+- Language selection randomization
+- Score calculation accuracy
+- Timer precision
+- localStorage operations
+
+### 10.2 Integration Tests
+- Complete game flow
+- Mode transitions
+- Results sharing
+- State persistence
+
+### 10.3 User Testing Focus Areas
+- First-time user experience
+- Mobile usability
+- Sharing functionality
+- Performance on slower devices

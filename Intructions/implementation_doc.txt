@@ -1,0 +1,1057 @@
+# Implementation Guide: Language Speedrun Game
+
+## 1. Project Setup
+
+### 1.1 Initialize Project
+```bash
+# Create new React project with Vite
+npm create vite@latest language-speedrun -- --template react
+cd language-speedrun
+
+# Install dependencies
+npm install
+
+# Install Tailwind CSS
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+### 1.2 Configure Tailwind
+**tailwind.config.js**
+```javascript
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        correct: '#6aaa64',
+        incorrect: '#787c7e',
+        warning: '#c9b458',
+      }
+    },
+  },
+  plugins: [],
+}
+```
+
+### 1.3 Project Structure
+```
+language-speedrun/
+├── public/
+│   └── favicon.ico
+├── src/
+│   ├── components/
+│   │   ├── HomePage.jsx
+│   │   ├── GameScreen.jsx
+│   │   ├── ResultsScreen.jsx
+│   │   ├── Timer.jsx
+│   │   ├── ProgressBar.jsx
+│   │   ├── LivesIndicator.jsx
+│   │   ├── QuestionDisplay.jsx
+│   │   ├── AnswerInput.jsx
+│   │   └── AutocompleteDropdown.jsx
+│   ├── hooks/
+│   │   ├── useGameState.js
+│   │   ├── useTimer.js
+│   │   └── useLocalStorage.js
+│   ├── services/
+│   │   ├── languageDatabase.js
+│   │   ├── scoreManager.js
+│   │   └── resultsFormatter.js
+│   ├── utils/
+│   │   ├── validation.js
+│   │   └── autocomplete.js
+│   ├── data/
+│   │   └── languages.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── package.json
+└── vite.config.js
+```
+
+## 2. Core Implementation
+
+### 2.1 Language Database (src/data/languages.js)
+```javascript
+export const languages = [
+  {
+    code: 'es',
+    name: 'Spanish',
+    acceptableAnswers: ['spanish', 'español', 'spa', 'es'],
+    samples: [
+      'El que mucho abarca, poco aprieta',
+      'No hay mal que por bien no venga',
+      'A caballo regalado no se le mira el diente',
+      'Más vale tarde que nunca',
+      'Hola, ¿cómo estás?'
+    ]
+  },
+  {
+    code: 'fr',
+    name: 'French',
+    acceptableAnswers: ['french', 'français', 'fra', 'fr'],
+    samples: [
+      'Bonjour, comment allez-vous?',
+      'C\'est la vie',
+      'Petit à petit, l\'oiseau fait son nid',
+      'L\'argent ne fait pas le bonheur',
+      'Qui vivra verra'
+    ]
+  },
+  // Add 20+ more languages...
+  {
+    code: 'ja',
+    name: 'Japanese',
+    acceptableAnswers: ['japanese', '日本語', 'jpn', 'ja'],
+    samples: [
+      'こんにちは、お元気ですか？',
+      '七転び八起き',
+      '花より団子',
+      '猿も木から落ちる',
+      '一期一会'
+    ]
+  },
+  {
+    code: 'ar',
+    name: 'Arabic',
+    acceptableAnswers: ['arabic', 'العربية', 'ara', 'ar'],
+    samples: [
+      'مرحبا، كيف حالك؟',
+      'الصبر مفتاح الفرج',
+      'العلم نور',
+      'في التأني السلامة',
+      'الصديق وقت الضيق'
+    ]
+  }
+  // Continue for all 20+ languages
+];
+```
+
+### 2.2 Game State Hook (src/hooks/useGameState.js)
+```javascript
+import { useState, useEffect, useCallback } from 'react';
+import { generateQuestions } from '../services/languageDatabase';
+
+export function useGameState(mode) {
+  const [gameState, setGameState] = useState({
+    status: 'ready', // 'ready' | 'playing' | 'paused' | 'finished'
+    currentQuestionIndex: 0,
+    questions: [],
+    answers: [],
+    lives: 3,
+    startTime: null,
+    endTime: null
+  });
+
+  const initializeGame = useCallback(() => {
+    const questions = generateQuestions(mode);
+    setGameState({
+      status: 'playing',
+      currentQuestionIndex: 0,
+      questions,
+      answers: [],
+      lives: mode === 'endless' || mode === 'perfect' ? 3 : Infinity,
+      startTime: Date.now(),
+      endTime: null
+    });
+  }, [mode]);
+
+  const submitAnswer = useCallback((userAnswer) => {
+    const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
+    const isCorrect = validateAnswer(currentQuestion, userAnswer);
+    const answerRecord = {
+      questionId: currentQuestion.id,
+      userAnswer,
+      correctAnswer: currentQuestion.correctAnswer,
+      isCorrect,
+      timeSpent: Date.now() - gameState.startTime - 
+                 gameState.answers.reduce((sum, a) => sum + a.timeSpent, 0)
+    };
+
+    const newAnswers = [...gameState.answers, answerRecord];
+    const newLives = isCorrect ? gameState.lives : gameState.lives - 1;
+    const isLastQuestion = gameState.currentQuestionIndex === gameState.questions.length - 1;
+    const isGameOver = newLives === 0 || (mode === 'perfect' && !isCorrect);
+
+    if (isGameOver || isLastQuestion) {
+      setGameState(prev => ({
+        ...prev,
+        answers: newAnswers,
+        lives: newLives,
+        status: 'finished',
+        endTime: Date.now()
+      }));
+    } else {
+      setGameState(prev => ({
+        ...prev,
+        answers: newAnswers,
+        lives: newLives,
+        currentQuestionIndex: prev.currentQuestionIndex + 1
+      }));
+    }
+  }, [gameState, mode]);
+
+  const pauseGame = useCallback(() => {
+    setGameState(prev => ({ ...prev, status: 'paused' }));
+  }, []);
+
+  const resumeGame = useCallback(() => {
+    setGameState(prev => ({ ...prev, status: 'playing' }));
+  }, []);
+
+  return {
+    gameState,
+    initializeGame,
+    submitAnswer,
+    pauseGame,
+    resumeGame
+  };
+}
+
+function validateAnswer(question, userAnswer) {
+  const normalized = userAnswer.toLowerCase().trim();
+  return question.acceptableAnswers.some(acceptable => 
+    acceptable.toLowerCase() === normalized
+  );
+}
+```
+
+### 2.3 Timer Hook (src/hooks/useTimer.js)
+```javascript
+import { useState, useEffect, useRef } from 'react';
+
+export function useTimer(isRunning, mode, initialTime = 0) {
+  const [time, setTime] = useState(initialTime);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (isRunning) {
+      const startTime = Date.now() - time;
+      intervalRef.current = setInterval(() => {
+        setTime(Date.now() - startTime);
+      }, 10); // Update every 10ms for precision
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isRunning]);
+
+  const formatTime = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const milliseconds = Math.floor((ms % 1000) / 10);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+  };
+
+  return { time, formatTime: () => formatTime(time) };
+}
+```
+
+### 2.4 Autocomplete Logic (src/utils/autocomplete.js)
+```javascript
+export function getAutocompleteSuggestions(input, languages) {
+  if (!input || input.length === 0) return [];
+  
+  const normalized = input.toLowerCase().trim();
+  
+  // Filter languages where name or any acceptable answer starts with input
+  const matches = languages.filter(lang => 
+    lang.name.toLowerCase().startsWith(normalized) ||
+    lang.acceptableAnswers.some(ans => ans.toLowerCase().startsWith(normalized))
+  );
+
+  // Sort: exact matches first, then alphabetically
+  matches.sort((a, b) => {
+    const aExact = a.name.toLowerCase() === normalized;
+    const bExact = b.name.toLowerCase() === normalized;
+    if (aExact && !bExact) return -1;
+    if (!aExact && bExact) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return matches.slice(0, 5); // Limit to 5 suggestions
+}
+```
+
+### 2.5 Answer Input Component (src/components/AnswerInput.jsx)
+```javascript
+import React, { useState, useEffect, useRef } from 'react';
+import { getAutocompleteSuggestions } from '../utils/autocomplete';
+import AutocompleteDropdown from './AutocompleteDropdown';
+
+export default function AnswerInput({ onSubmit, disabled, languages, showFeedback, isCorrect }) {
+  const [input, setInput] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    // Auto-focus input on mount and after each question
+    inputRef.current?.focus();
+  }, [showFeedback]);
+
+  useEffect(() => {
+    if (input.length > 0) {
+      const newSuggestions = getAutocompleteSuggestions(input, languages);
+      setSuggestions(newSuggestions);
+      setSelectedIndex(-1);
+    } else {
+      setSuggestions([]);
+      setSelectedIndex(-1);
+    }
+  }, [input, languages]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+        handleSubmit(suggestions[selectedIndex].name);
+      } else {
+        handleSubmit(input);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => 
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Tab' && suggestions.length > 0) {
+      e.preventDefault();
+      const index = selectedIndex >= 0 ? selectedIndex : 0;
+      setInput(suggestions[index].name);
+      setSuggestions([]);
+    } else if (e.key === 'Escape') {
+      setSuggestions([]);
+      setSelectedIndex(-1);
+    }
+  };
+
+  const handleSubmit = (answer) => {
+    if (!disabled && answer.trim()) {
+      onSubmit(answer.trim());
+      setInput('');
+      setSuggestions([]);
+      setSelectedIndex(-1);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    handleSubmit(suggestion.name);
+  };
+
+  return (
+    <div className="relative w-full max-w-md">
+      <input
+        ref={inputRef}
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={disabled}
+        placeholder="Type language name..."
+        className={`
+          w-full px-6 py-4 text-lg border-2 rounded-lg
+          transition-all duration-200
+          focus:outline-none focus:ring-2
+          ${showFeedback 
+            ? isCorrect 
+              ? 'border-correct bg-green-50' 
+              : 'border-incorrect bg-red-50 shake'
+            : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+          }
+          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        `}
+      />
+      
+      {suggestions.length > 0 && !disabled && (
+        <AutocompleteDropdown
+          suggestions={suggestions}
+          selectedIndex={selectedIndex}
+          onSelect={handleSuggestionClick}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+### 2.6 Autocomplete Dropdown (src/components/AutocompleteDropdown.jsx)
+```javascript
+import React from 'react';
+
+export default function AutocompleteDropdown({ suggestions, selectedIndex, onSelect }) {
+  return (
+    <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+      {suggestions.map((suggestion, index) => (
+        <button
+          key={suggestion.code}
+          onClick={() => onSelect(suggestion)}
+          className={`
+            w-full px-6 py-3 text-left text-base
+            transition-colors duration-150
+            ${selectedIndex === index 
+              ? 'bg-blue-100 text-blue-900' 
+              : 'hover:bg-gray-100'
+            }
+            ${index === 0 ? 'rounded-t-lg' : ''}
+            ${index === suggestions.length - 1 ? 'rounded-b-lg' : 'border-b border-gray-200'}
+          `}
+        >
+          {suggestion.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+### 2.7 Game Screen Component (src/components/GameScreen.jsx)
+```javascript
+import React, { useState, useEffect } from 'react';
+import { useGameState } from '../hooks/useGameState';
+import { useTimer } from '../hooks/useTimer';
+import Timer from './Timer';
+import ProgressBar from './ProgressBar';
+import LivesIndicator from './LivesIndicator';
+import QuestionDisplay from './QuestionDisplay';
+import AnswerInput from './AnswerInput';
+import { languages } from '../data/languages';
+
+export default function GameScreen({ mode, onFinish, onQuit }) {
+  const { gameState, initializeGame, submitAnswer, pauseGame, resumeGame } = useGameState(mode);
+  const { time, formatTime } = useTimer(gameState.status === 'playing', mode);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
+
+  useEffect(() => {
+    initializeGame();
+  }, [initializeGame]);
+
+  useEffect(() => {
+    if (gameState.status === 'finished') {
+      setTimeout(() => {
+        onFinish({
+          mode,
+          time,
+          answers: gameState.answers,
+          questions: gameState.questions
+        });
+      }, 1500);
+    }
+  }, [gameState.status]);
+
+  const handleSubmit = (answer) => {
+    const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
+    const isCorrect = currentQuestion.acceptableAnswers.some(
+      acceptable => acceptable.toLowerCase() === answer.toLowerCase()
+    );
+
+    setLastAnswerCorrect(isCorrect);
+    setShowFeedback(true);
+    
+    setTimeout(() => {
+      submitAnswer(answer);
+      setShowFeedback(false);
+    }, 1500);
+  };
+
+  if (gameState.status === 'ready' || gameState.questions.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-2xl">Loading game...</div>
+      </div>
+    );
+  }
+
+  const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <Timer time={formatTime()} />
+          <div className="text-lg font-semibold text-gray-600">
+            {gameState.currentQuestionIndex + 1} / {gameState.questions.length}
+          </div>
+          {gameState.lives !== Infinity && (
+            <LivesIndicator lives={gameState.lives} />
+          )}
+        </div>
+
+        {/* Progress Bar */}
+        <ProgressBar 
+          current={gameState.currentQuestionIndex + 1} 
+          total={gameState.questions.length} 
+        />
+
+        {/* Question */}
+        <QuestionDisplay 
+          text={currentQuestion.text}
+          questionNumber={gameState.currentQuestionIndex + 1}
+        />
+
+        {/* Answer Input */}
+        <div className="mt-8 flex flex-col items-center">
+          <AnswerInput
+            onSubmit={handleSubmit}
+            disabled={showFeedback || gameState.status !== 'playing'}
+            languages={languages}
+            showFeedback={showFeedback}
+            isCorrect={lastAnswerCorrect}
+          />
+          
+          {showFeedback && !lastAnswerCorrect && (
+            <div className="mt-4 text-lg text-red-600">
+              Correct answer: <span className="font-semibold">{currentQuestion.correctAnswer}</span>
+            </div>
+          )}
+
+          <p className="mt-4 text-sm text-gray-500">
+            Press Enter to submit
+          </p>
+        </div>
+
+        {/* Pause Button */}
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={onQuit}
+            className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            Quit to Menu
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### 2.8 Supporting Components
+
+#### Timer Component (src/components/Timer.jsx)
+```javascript
+import React from 'react';
+
+export default function Timer({ time }) {
+  return (
+    <div className="flex items-center space-x-2">
+      <span className="text-3xl">⏱️</span>
+      <span className="text-2xl font-mono font-bold text-gray-800">
+        {time}
+      </span>
+    </div>
+  );
+}
+```
+
+#### ProgressBar Component (src/components/ProgressBar.jsx)
+```javascript
+import React from 'react';
+
+export default function ProgressBar({ current, total }) {
+  const percentage = (current / total) * 100;
+
+  return (
+    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div 
+        className="h-full bg-blue-500 transition-all duration-300 ease-out"
+        style={{ width: `${percentage}%` }}
+      />
+    </div>
+  );
+}
+```
+
+#### LivesIndicator Component (src/components/LivesIndicator.jsx)
+```javascript
+import React from 'react';
+
+export default function LivesIndicator({ lives }) {
+  return (
+    <div className="flex items-center space-x-1">
+      {Array.from({ length: lives }).map((_, i) => (
+        <span key={i} className="text-2xl">❤️</span>
+      ))}
+      {Array.from({ length: 3 - lives }).map((_, i) => (
+        <span key={i} className="text-2xl opacity-30">💔</span>
+      ))}
+    </div>
+  );
+}
+```
+
+#### QuestionDisplay Component (src/components/QuestionDisplay.jsx)
+```javascript
+import React from 'react';
+
+export default function QuestionDisplay({ text, questionNumber }) {
+  return (
+    <div className="my-12 text-center">
+      <div className="text-4xl font-serif leading-relaxed text-gray-900 px-4">
+        "{text}"
+      </div>
+    </div>
+  );
+}
+```
+
+### 2.9 Results Screen (src/components/ResultsScreen.jsx)
+```javascript
+import React, { useState, useEffect } from 'react';
+import { formatShareableResults } from '../services/resultsFormatter';
+import { saveScore } from '../services/scoreManager';
+
+export default function ResultsScreen({ gameData, onPlayAgain, onMenu }) {
+  const [copied, setCopied] = useState(false);
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    const correctCount = gameData.answers.filter(a => a.isCorrect).length;
+    const totalCount = gameData.answers.length;
+    const accuracy = Math.round((correctCount / totalCount) * 100);
+    const totalTime = gameData.time;
+    
+    const calculatedStats = {
+      mode: gameData.mode,
+      correctCount,
+      totalCount,
+      accuracy,
+      totalTime,
+      formatTime: formatTime(totalTime)
+    };
+
+    setStats(calculatedStats);
+    saveScore(gameData.mode, calculatedStats);
+  }, [gameData]);
+
+  const handleShare = () => {
+    const shareText = formatShareableResults(gameData, stats);
+    navigator.clipboard.writeText(shareText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!stats) return null;
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8">
+        <h1 className="text-4xl font-bold text-center mb-8">
+          Game Complete! 🎉
+        </h1>
+
+        {/* Summary Stats */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="bg-blue-50 rounded-xl p-6 text-center">
+            <div className="text-sm text-gray-600 mb-2">Time</div>
+            <div className="text-3xl font-bold text-blue-600">{stats.formatTime}</div>
+          </div>
+          <div className="bg-green-50 rounded-xl p-6 text-center">
+            <div className="text-sm text-gray-600 mb-2">Accuracy</div>
+            <div className="text-3xl font-bold text-green-600">{stats.accuracy}%</div>
+          </div>
+        </div>
+
+        {/* Score Display */}
+        <div className="text-center mb-8">
+          <div className="text-xl mb-4">
+            ✅ {stats.correctCount} / {stats.totalCount} correct
+          </div>
+          
+          {/* Visual Result Grid */}
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
+            {gameData.answers.map((answer, i) => (
+              <span key={i} className="text-3xl">
+                {answer.isCorrect ? '✅' : '❌'}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex flex-col space-y-4">
+          <button
+            onClick={handleShare}
+            className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
+          >
+            {copied ? '✓ Copied!' : '📋 Share Results'}
+          </button>
+          
+          <button
+            onClick={onPlayAgain}
+            className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
+          >
+            🔄 Play Again
+          </button>
+          
+          <button
+            onClick={onMenu}
+            className="w-full py-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl transition-colors"
+          >
+            🏠 Main Menu
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  const milliseconds = Math.floor((ms % 1000) / 10);
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+}
+```
+
+### 2.10 Home Page (src/components/HomePage.jsx)
+```javascript
+import React from 'react';
+import { getPersonalBests } from '../services/scoreManager';
+
+export default function HomePage({ onSelectMode }) {
+  const personalBests = getPersonalBests();
+
+  const modes = [
+    {
+      id: 'sprint',
+      name: 'Sprint',
+      icon: '🏃',
+      description: '10 languages as fast as possible',
+      stat: personalBests.sprint?.bestTime 
+        ? `Best: ${formatTime(personalBests.sprint.bestTime)}`
+        : 'Not played yet'
+    },
+    {
+      id: 'timeattack',
+      name: 'Time Attack',
+      icon: '⏰',
+      description: '60 seconds, maximum languages',
+      stat: personalBests.timeattack?.highScore 
+        ? `Best: ${personalBests.timeattack.highScore} languages`
+        : 'Not played yet'
+    },
+    {
+      id: 'endless',
+      name: 'Endless',
+      icon: '♾️',
+      description: 'Keep going until 3 strikes',
+      stat: personalBests.endless?.highScore 
+        ? `Best: ${personalBests.endless.highScore} languages`
+        : 'Not played yet'
+    },
+    {
+      id: 'perfect',
+      name: 'Perfect Run',
+      icon: '💎',
+      description: '20 languages, no mistakes',
+      stat: personalBests.perfect?.completions 
+        ? `Completed ${personalBests.perfect.completions} times`
+        : 'Not completed'
+    }
+  ];
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="w-full max-w-4xl">
+        <h1 className="text-6xl font-bold text-center mb-4 text-gray-900">
+          🌍 Language Sprint
+        </h1>
+        <p className="text-xl text-center text-gray-600 mb-12">
+          How fast can you identify languages?
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {modes.map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => onSelectMode(mode.id)}
+              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+            >
+              <div className="text-6xl mb-4">{mode.icon}</div>
+              <h2 className="text-2xl font-bold mb-2 text-gray-900">{mode.name}</h2>
+              <p className="text-gray-600 mb-4">{mode.description}</p>
+              <div className="text-sm font-semibold text-blue-600">
+                {mode.stat}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <p className="text-gray-500">
+            Total games played: {personalBests.totalGamesPlayed || 0}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+```
+
+## 3. Service Layer Implementation
+
+### 3.1 Language Database Service (src/services/languageDatabase.js)
+```javascript
+import { languages } from '../data/languages';
+
+export function generateQuestions(mode) {
+  const questionCounts = {
+    sprint: 10,
+    timeattack: 50, // Generate more than needed
+    endless: 100,
+    perfect: 20
+  };
+
+  const count = questionCounts[mode] || 10;
+  const shuffled = [...languages].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, Math.min(count, languages.length));
+
+  return selected.map((lang, index) => {
+    const sampleIndex = Math.floor(Math.random() * lang.samples.length);
+    return {
+      id: index,
+      text: lang.samples[sampleIndex],
+      correctAnswer: lang.name,
+      acceptableAnswers: lang.acceptableAnswers,
+      timestamp: Date.now()
+    };
+  });
+}
+```
+
+### 3.2 Score Manager Service (src/services/scoreManager.js)
+```javascript
+const STORAGE_KEY = 'langspeed_stats';
+
+export function saveScore(mode, stats) {
+  const existing = getPersonalBests();
+  
+  switch(mode) {
+    case 'sprint':
+      if (!existing.sprint || stats.totalTime < existing.sprint.bestTime) {
+        existing.sprint = {
+          ...existing.sprint,
+          bestTime: stats.totalTime,
+          bestAccuracy: stats.accuracy,
+          gamesPlayed: (existing.sprint?.gamesPlayed || 0) + 1
+        };
+      }
+      break;
+    case 'timeattack':
+      if (!existing.timeattack || stats.correctCount > existing.timeattack.highScore) {
+        existing.timeattack = {
+          ...existing.timeattack,
+          highScore: stats.correctCount,
+          gamesPlayed: (existing.timeattack?.gamesPlayed || 0) + 1
+        };
+      }
+      break;
+    case 'endless':
+      if (!existing.endless || stats.correctCount > existing.endless.highScore) {
+        existing.endless = {
+          ...existing.endless,
+          highScore: stats.correctCount,
+          gamesPlayed: (existing.endless?.gamesPlayed || 0) + 1
+        };
+      }
+      break;
+    case 'perfect':
+      if (stats.accuracy === 100) {
+        existing.perfect = {
+          ...existing.perfect,
+          bestTime: Math.min(stats.totalTime, existing.perfect?.bestTime || Infinity),
+          completions: (existing.perfect?.completions || 0) + 1,
+          gamesPlayed: (existing.perfect?.gamesPlayed || 0) + 1
+        };
+      }
+      break;
+  }
+
+  existing.totalGamesPlayed = (existing.totalGamesPlayed || 0) + 1;
+  existing.lastPlayed = new Date().toISOString();
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+  return existing;
+}
+
+export function getPersonalBests() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+```
+
+### 3.3 Results Formatter (src/services/resultsFormatter.js)
+```javascript
+export function formatShareableResults(gameData, stats) {
+  const modeNames = {
+    sprint: 'Sprint 🏃',
+    timeattack: 'Time Attack ⏰',
+    endless: 'Endless ♾️',
+    perfect: 'Perfect Run 💎'
+  };
+
+  const checkmarks = gameData.answers
+    .map(a => a.isCorrect ? '✅' : '❌')
+    .join('');
+
+  return `
+🌍 Language ${modeNames[gameData.mode]}
+⏱️ ${stats.formatTime} | ✅ ${stats.correctCount}/${stats.totalCount} (${stats.accuracy}%)
+
+${checkmarks}
+
+Play at: [YOUR_URL_HERE]
+  `.trim();
+}
+```
+
+## 4. Main App Component (src/App.jsx)
+```javascript
+import React, { useState } from 'react';
+import HomePage from './components/HomePage';
+import GameScreen from './components/GameScreen';
+import ResultsScreen from './components/ResultsScreen';
+
+export default function App() {
+  const [screen, setScreen] = useState('home'); // 'home' | 'game' | 'results'
+  const [selectedMode, setSelectedMode] = useState(null);
+  const [gameResults, setGameResults] = useState(null);
+
+  const handleSelectMode = (mode) => {
+    setSelectedMode(mode);
+    setScreen('game');
+  };
+
+  const handleGameFinish = (results) => {
+    setGameResults(results);
+    setScreen('results');
+  };
+
+  const handlePlayAgain = () => {
+    setScreen('game');
+  };
+
+  const handleReturnToMenu = () => {
+    setScreen('home');
+    setSelectedMode(null);
+    setGameResults(null);
+  };
+
+  return (
+    <div className="min-h-screen">
+      {screen === 'home' && (
+        <HomePage onSelectMode={handleSelectMode} />
+      )}
+      
+      {screen === 'game' && (
+        <GameScreen
+          mode={selectedMode}
+          onFinish={handleGameFinish}
+          onQuit={handleReturnToMenu}
+        />
+      )}
+      
+      {screen === 'results' && (
+        <ResultsScreen
+          gameData={gameResults}
+          onPlayAgain={handlePlayAgain}
+          onMenu={handleReturnToMenu}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+## 5. Styling (src/index.css)
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .shake {
+    animation: shake 0.5s;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+```
+
+## 6. Deployment
+
+### 6.1 Build for Production
+```bash
+npm run build
+```
+
+### 6.2 Deploy to Vercel
+```bash
+npm install -g vercel
+vercel
+```
+
+### 6.3 Deploy to Netlify
+```bash
+npm run build
+# Drag and drop the 'dist' folder to Netlify
+```
+
+## 7. Testing Checklist
+
+- [ ] All 20+ languages load correctly
+- [ ] Timer updates with millisecond precision
+- [ ] Autocomplete shows relevant suggestions
+- [ ] Arrow keys navigate autocomplete
+- [ ] Enter submits answer
+- [ ] Correct/incorrect feedback displays properly
+- [ ] Progress bar updates correctly
+- [ ] Lives decrease on wrong answers
+- [ ] Game ends at appropriate time
+- [ ] Results screen shows accurate statistics
+- [ ] Share button copies to clipboard
+- [ ] localStorage persists scores
+- [ ] Mobile responsive design works
+- [ ] Keyboard navigation functions properly
+- [ ] All game modes work as expected
+
+## 8. Future Enhancements
+- Add daily challenge mode
+- Implement difficulty levels
+- Add sound effects (optional toggle)
+- Create achievement system
+- Add language learning hints
+- Build global leaderboard
+- Support custom language packs
