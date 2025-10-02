@@ -1,0 +1,96 @@
+import { NextResponse } from 'next/server';
+
+// In-memory storage for now (will be replaced with a database in production)
+// For Vercel, you can use Vercel KV, Postgres, or any other database
+let guestbook: { username: string; timestamp: number }[] = [];
+let scores: { username: string; mode: string; score: number; time: number; timestamp: number }[] = [];
+
+export async function GET() {
+  return NextResponse.json({
+    guestbook,
+    scores: scores.slice(-100) // Return last 100 scores
+  });
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { action, data } = body;
+
+    if (action === 'sign') {
+      // Add new guestbook entry
+      const entry = {
+        username: data.username,
+        timestamp: Date.now()
+      };
+
+      // Check if username already exists
+      const existingIndex = guestbook.findIndex(e => e.username === data.username);
+      if (existingIndex >= 0) {
+        guestbook[existingIndex] = entry; // Update timestamp
+      } else {
+        guestbook.push(entry);
+      }
+
+      return NextResponse.json({ success: true, entry });
+    }
+
+    if (action === 'submit-score') {
+      // Add new score
+      const scoreEntry = {
+        username: data.username,
+        mode: data.mode,
+        score: data.score,
+        time: data.time,
+        timestamp: Date.now()
+      };
+
+      scores.push(scoreEntry);
+
+      return NextResponse.json({ success: true, scoreEntry });
+    }
+
+    if (action === 'get-leaderboard') {
+      // Calculate leaderboard
+      const leaderboard = calculateLeaderboard();
+      return NextResponse.json({ success: true, leaderboard });
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+  }
+}
+
+function calculateLeaderboard() {
+  const userScores: { [username: string]: { totalScore: number; streak: number } } = {};
+
+  scores.forEach(score => {
+    if (!userScores[score.username]) {
+      userScores[score.username] = { totalScore: 0, streak: 0 };
+    }
+    userScores[score.username].totalScore += score.score;
+  });
+
+  // Calculate streaks (simplified - number of days played)
+  const userDays: { [username: string]: Set<string> } = {};
+  scores.forEach(score => {
+    const date = new Date(score.timestamp).toDateString();
+    if (!userDays[score.username]) {
+      userDays[score.username] = new Set();
+    }
+    userDays[score.username].add(date);
+  });
+
+  Object.keys(userDays).forEach(username => {
+    userScores[username].streak = userDays[username].size;
+  });
+
+  return Object.entries(userScores)
+    .map(([username, data]) => ({
+      username,
+      totalScore: data.totalScore,
+      streak: data.streak
+    }))
+    .sort((a, b) => b.totalScore - a.totalScore);
+}

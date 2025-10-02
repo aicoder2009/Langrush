@@ -92,30 +92,63 @@ export function loginUser(username: string, password: string): { success: boolea
   return { success: true };
 }
 
-export function createGuestUser(tempUsername: string): { success: boolean; error?: string } {
+export async function createGuestUser(tempUsername: string): Promise<{ success: boolean; error?: string }> {
   if (!tempUsername || tempUsername.trim().length === 0) {
     return { success: false, error: 'Username cannot be empty' };
   }
 
-  const guestUsername = `${GUEST_PREFIX}${tempUsername.trim()}`;
-  const users = getAllUsers();
+  const username = tempUsername.trim();
 
-  // Check if guest username already exists in this session
-  if (users.some(u => u.username === guestUsername)) {
-    return { success: false, error: 'This guest name is already in use' };
+  try {
+    // Sign the online guestbook
+    const response = await fetch('/api/guestbook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'sign',
+        data: { username }
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      return { success: false, error: result.error || 'Failed to sign guestbook' };
+    }
+
+    // Also save locally for offline access
+    const guestUser: User = {
+      username,
+      isGuest: true,
+      createdAt: new Date().toISOString()
+    };
+
+    const users = getAllUsers();
+    const existingIndex = users.findIndex(u => u.username === username);
+    if (existingIndex >= 0) {
+      users[existingIndex] = guestUser;
+    } else {
+      users.push(guestUser);
+    }
+    saveUsers(users);
+    setCurrentUser(guestUser);
+
+    return { success: true };
+  } catch (error) {
+    // Fallback to local-only if API fails
+    const guestUser: User = {
+      username,
+      isGuest: true,
+      createdAt: new Date().toISOString()
+    };
+
+    const users = getAllUsers();
+    users.push(guestUser);
+    saveUsers(users);
+    setCurrentUser(guestUser);
+
+    return { success: true };
   }
-
-  const guestUser: User = {
-    username: guestUsername,
-    isGuest: true,
-    createdAt: new Date().toISOString()
-  };
-
-  users.push(guestUser);
-  saveUsers(users);
-  setCurrentUser(guestUser);
-
-  return { success: true };
 }
 
 export function getCurrentAuth(): AuthState {

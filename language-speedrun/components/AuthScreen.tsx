@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createGuestUser } from '../services/auth';
 
 interface AuthScreenProps {
@@ -10,8 +10,31 @@ interface AuthScreenProps {
 export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [recentPlayers, setRecentPlayers] = useState<{ username: string; timestamp: number }[]>([]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Fetch recent players from the guestbook
+    const fetchRecentPlayers = async () => {
+      try {
+        const response = await fetch('/api/guestbook');
+        const data = await response.json();
+        if (data.guestbook) {
+          // Get the last 5 players, sorted by most recent
+          const recent = data.guestbook
+            .sort((a: any, b: any) => b.timestamp - a.timestamp)
+            .slice(0, 5);
+          setRecentPlayers(recent);
+        }
+      } catch (error) {
+        console.error('Failed to fetch recent players:', error);
+      }
+    };
+
+    fetchRecentPlayers();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -20,7 +43,9 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
       return;
     }
 
-    const result = createGuestUser(username.trim());
+    setLoading(true);
+    const result = await createGuestUser(username.trim());
+    setLoading(false);
 
     if (result.success) {
       onAuthenticated();
@@ -49,6 +74,25 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Recent Players Section */}
+            {recentPlayers.length > 0 && (
+              <div className="mb-6 p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border-2 border-blue-200">
+                <h4 className="text-sm font-bold text-gray-700 mb-3 text-center">
+                  🌟 Recent Players 🌟
+                </h4>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {recentPlayers.map((player, index) => (
+                    <div
+                      key={index}
+                      className="px-3 py-1.5 bg-white rounded-full border-2 border-purple-300 text-sm font-medium text-gray-700 shadow-sm"
+                    >
+                      {player.username}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <label htmlFor="username" className="block text-sm font-bold mb-2 text-gray-700">
                 Your Name
@@ -74,15 +118,16 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-br from-green-400 to-green-500 text-white font-black text-xl py-4 px-6 rounded-full hover:from-green-500 hover:to-green-600 transition-all border-4 border-white shadow-lg"
+              disabled={loading}
+              className="w-full bg-gradient-to-br from-green-400 to-green-500 text-white font-black text-xl py-4 px-6 rounded-full hover:from-green-500 hover:to-green-600 transition-all border-4 border-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Let's Play! 🚀
+              {loading ? 'Signing in...' : "Let's Play! 🚀"}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t-2 border-gray-200">
             <p className="text-center text-xs text-gray-500">
-              💾 Your scores are saved locally on this device
+              🌐 Your name and scores are saved online!
             </p>
           </div>
         </div>
