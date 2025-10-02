@@ -8,7 +8,19 @@ interface ResultsScreenProps {
   gameData: {
     mode: string;
     time: number;
-    answers: Array<{ isCorrect: boolean }>;
+    answers: Array<{
+      questionId: number;
+      userAnswer: string;
+      correctAnswer: string;
+      isCorrect: boolean;
+      timeSpent: number;
+    }>;
+    questions: Array<{
+      id: number;
+      text: string;
+      correctAnswer: string;
+      acceptableAnswers: string[];
+    }>;
   };
   onPlayAgain: () => void;
   onMenu: () => void;
@@ -80,12 +92,44 @@ export default function ResultsScreen({ gameData, onPlayAgain, onMenu }: Results
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2 mb-4">
               {gameData.answers.map((answer, i) => (
                 <span key={i} className="text-2xl">
                   {answer.isCorrect ? '✅' : '❌'}
                 </span>
               ))}
+            </div>
+
+            {/* Detailed answer breakdown */}
+            <div className="max-h-48 overflow-y-auto space-y-2">
+              {gameData.answers.map((answer, i) => {
+                const question = gameData.questions[i];
+                return (
+                  <div
+                    key={i}
+                    className={`p-2 rounded-lg text-xs ${
+                      answer.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                    }`}
+                  >
+                    <div className="font-bold mb-1">{question.text}</div>
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1">
+                        {!answer.isCorrect && answer.userAnswer && (
+                          <div className="text-red-600">
+                            Your answer: <span className="font-medium">{answer.userAnswer}</span>
+                          </div>
+                        )}
+                        <div className={answer.isCorrect ? 'text-green-600' : 'text-gray-600'}>
+                          Correct: <span className="font-medium">{answer.correctAnswer}</span>
+                        </div>
+                      </div>
+                      <div className="text-gray-500 text-xs">
+                        {(answer.timeSpent / 1000).toFixed(1)}s
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
