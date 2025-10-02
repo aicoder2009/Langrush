@@ -22,7 +22,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
         if (data.guestbook) {
           // Get the last 5 players, sorted by most recent
           const recent = data.guestbook
-            .sort((a: any, b: any) => b.timestamp - a.timestamp)
+            .sort((a: { timestamp: number }, b: { timestamp: number }) => b.timestamp - a.timestamp)
             .slice(0, 5);
           setRecentPlayers(recent);
         }

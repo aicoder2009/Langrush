@@ -12,7 +12,12 @@ export default function Home() {
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const [showDifficultyOverlay, setShowDifficultyOverlay] = useState(false);
-  const [gameResults, setGameResults] = useState<any>(null);
+  const [gameResults, setGameResults] = useState<{
+    mode: string;
+    time: number;
+    answers: Array<{ questionId: number; userAnswer: string; correctAnswer: string; isCorrect: boolean; timeSpent: number }>;
+    questions: Array<{ id: number; text: string; correctAnswer: string; acceptableAnswers: string[] }>;
+  } | null>(null);
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -32,7 +37,12 @@ export default function Home() {
     setScreen('game');
   };
 
-  const handleGameFinish = (results: any) => {
+  const handleGameFinish = (results: {
+    mode: string;
+    time: number;
+    answers: Array<{ questionId: number; userAnswer: string; correctAnswer: string; isCorrect: boolean; timeSpent: number }>;
+    questions: Array<{ id: number; text: string; correctAnswer: string; acceptableAnswers: string[] }>;
+  }) => {
     setGameResults(results);
     setScreen('results');
   };

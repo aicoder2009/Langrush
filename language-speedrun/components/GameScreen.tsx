@@ -10,7 +10,12 @@ import AnswerInput from './AnswerInput';
 interface GameScreenProps {
   mode: string;
   difficulty: string;
-  onFinish: (results: any) => void;
+  onFinish: (results: {
+    mode: string;
+    time: number;
+    answers: Array<{ questionId: number; userAnswer: string; correctAnswer: string; isCorrect: boolean; timeSpent: number }>;
+    questions: Array<{ id: number; text: string; correctAnswer: string; acceptableAnswers: string[] }>;
+  }) => void;
   onQuit: () => void;
 }
 
@@ -21,7 +26,6 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
   const [lastCorrectAnswer, setLastCorrectAnswer] = useState<string>('');
-  const [previousRoundTime, setPreviousRoundTime] = useState<number | null>(null);
   const [roundStartTime, setRoundStartTime] = useState<number>(Date.now());
   const [timeComparison, setTimeComparison] = useState<{ difference: number; isFaster: boolean } | null>(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -88,7 +92,7 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
     submitAnswer('', currentQuestion); // Submit empty answer to move forward
 
     setRoundStartTime(Date.now());
-  }, [currentScore, questions, gameState.currentQuestionIndex, submitAnswer]);
+  }, [questions, gameState.currentQuestionIndex, submitAnswer]);
 
   const handleSubmit = useCallback((answer: string) => {
     const currentQuestion = questions[gameState.currentQuestionIndex];
@@ -108,8 +112,6 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
         isFaster: comparison.isFaster
       });
     }
-
-    setPreviousRoundTime(roundTime);
 
     // Update score and combo
     if (result.isCorrect) {
@@ -135,7 +137,6 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
     setTimeout(() => {
       setShowFeedback(false);
       setRoundStartTime(Date.now()); // Reset for next round
-      setPreviousRoundTime(null); // Clear comparison after showing
       setTimeComparison(null);
     }, 1500);
   }, [questions, gameState.currentQuestionIndex, submitAnswer, roundStartTime, comboStreak, currentScore]);
@@ -164,25 +165,6 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
       return `${seconds}s`;
     }
     return formatTime();
-  };
-
-  // Determine timer styling based on mode and conditions
-  const getTimerStyle = () => {
-    const baseClasses = 'font-mono font-bold transition-all duration-300';
-
-    if (mode === 'timeattack' && gameState.timeRemaining !== undefined) {
-      const seconds = Math.ceil(gameState.timeRemaining / 1000);
-
-      // Critical warning: less than 10 seconds
-      if (seconds <= 10) {
-        return `${baseClasses} text-3xl text-red-600 animate-pulse`;
-      }
-
-      return `${baseClasses} text-2xl`;
-    }
-
-    // Default timer styling for other modes
-    return `${baseClasses} text-lg`;
   };
 
   return (
