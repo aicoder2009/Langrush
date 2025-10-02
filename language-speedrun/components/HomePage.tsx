@@ -75,13 +75,22 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
             <button
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+              className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 border-2 border-transparent hover:border-purple-500 overflow-hidden"
             >
-              <div className="text-6xl mb-4">{mode.icon}</div>
-              <h2 className="text-2xl font-bold mb-2 text-gray-900">{mode.name}</h2>
-              <p className="text-gray-600 mb-4">{mode.description}</p>
-              <div className="text-sm font-semibold text-blue-600">
-                {mode.stat}
+              <div className="relative">
+                <div className="text-6xl mb-4">{mode.icon}</div>
+                <h2 className="text-2xl font-bold mb-2 text-gray-900">{mode.name}</h2>
+                <p className="text-gray-600 mb-4">{mode.description}</p>
+                <div className="text-sm font-semibold text-blue-600">
+                  {mode.stat}
+                </div>
+
+                {/* PLAY button overlay */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-purple-500/90 rounded-2xl">
+                  <div className="bg-white text-purple-600 font-black text-xl sm:text-2xl px-8 py-4 rounded-xl shadow-2xl">
+                    ▶ PLAY
+                  </div>
+                </div>
               </div>
             </button>
           ))}
