@@ -66,14 +66,14 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (isPaused) {
-          setIsPaused(false);
-        } else {
-          setIsPaused(true);
-        }
+      // Use F2 for pause/resume (universal key that won't conflict with typing)
+      if (e.key === 'F2') {
+        e.preventDefault();
+        setIsPaused(!isPaused);
       }
-      if (e.key === 'p' || e.key === 'P') {
+      // Keep Escape as toggle for convenience
+      if (e.key === 'Escape') {
+        e.preventDefault();
         setIsPaused(!isPaused);
       }
     };
@@ -188,16 +188,16 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
         <div className="bg-white rounded-2xl px-4 py-3 border-4 border-gray-200 shadow-lg">
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-800 text-white rounded font-bold text-xs border-2 border-gray-900 shadow-sm min-w-[24px] text-center">
-                P
+              <kbd className="px-2 py-1 bg-gray-800 text-white rounded font-bold text-xs border-2 border-gray-900 shadow-sm min-w-[28px] text-center">
+                F2
               </kbd>
               <span className="text-gray-700 font-medium">Pause</span>
             </div>
             <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-800 text-white rounded font-bold text-xs border-2 border-gray-900 shadow-sm min-w-[24px] text-center">
+              <kbd className="px-2 py-1 bg-gray-800 text-white rounded font-bold text-xs border-2 border-gray-900 shadow-sm min-w-[28px] text-center">
                 Esc
               </kbd>
-              <span className="text-gray-700 font-medium">Toggle</span>
+              <span className="text-gray-700 font-medium">Pause</span>
             </div>
           </div>
         </div>

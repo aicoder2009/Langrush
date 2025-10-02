@@ -2,12 +2,14 @@
 
 import { useState, useEffect, memo } from 'react';
 import { getLeaderboard, getCurrentUser, getCurrentStreak, type LeaderboardEntry } from '../services/leaderboard';
+import { logout } from '../services/auth';
 
 interface HomePageProps {
   onSelectMode: (mode: string) => void;
+  onLogout?: () => void;
 }
 
-const HomePage = memo(({ onSelectMode }: HomePageProps) => {
+const HomePage = memo(({ onSelectMode, onLogout }: HomePageProps) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [currentUser, setCurrentUser] = useState<string>('');
   const [currentStreak, setCurrentStreak] = useState<number>(0);
@@ -53,9 +55,32 @@ const HomePage = memo(({ onSelectMode }: HomePageProps) => {
     endless: 'from-green-400 to-green-500'
   };
 
+  const handleLogout = () => {
+    logout();
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F4ED] p-4 flex flex-col">
       <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
+        {/* Logout Button - Top Right */}
+        <div className="fixed top-6 right-6 z-40">
+          <button
+            onClick={handleLogout}
+            className="bg-white px-6 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all border-2 border-gray-200 hover:border-red-400 hover:bg-red-50 text-gray-700 hover:text-red-600 flex items-center gap-2"
+            aria-label="Logout"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            Leave
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center py-4 mb-4">
           <h1 className="text-4xl sm:text-5xl font-black italic mb-1">

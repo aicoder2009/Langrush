@@ -61,6 +61,12 @@ export default function Home() {
     setScreen('home');
   };
 
+  const handleLogout = () => {
+    setScreen('auth');
+    setSelectedMode(null);
+    setGameResults(null);
+  };
+
   return (
     <>
       {screen === 'auth' && (
@@ -71,7 +77,7 @@ export default function Home() {
 
       {screen === 'home' && (
         <>
-          <HomePage onSelectMode={handleSelectMode} />
+          <HomePage onSelectMode={handleSelectMode} onLogout={handleLogout} />
 
           {/* Difficulty Selection Overlay */}
           {showDifficultyOverlay && selectedMode && (
