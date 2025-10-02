@@ -12,16 +12,18 @@ import AnswerInput from './AnswerInput';
 
 interface GameScreenProps {
   mode: string;
+  difficulty: string;
   onFinish: (results: any) => void;
   onQuit: () => void;
 }
 
-export default function GameScreen({ mode, onFinish, onQuit }: GameScreenProps) {
-  const [questions] = useState(() => generateQuestions(mode));
+export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameScreenProps) {
+  const [questions] = useState(() => generateQuestions(mode, difficulty));
   const { gameState, startGame, submitAnswer } = useGameState(mode, questions);
   const { time, formatTime } = useTimer(gameState.status === 'playing');
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
+  const [lastCorrectAnswer, setLastCorrectAnswer] = useState<string>('');
 
   useEffect(() => {
     startGame();
@@ -45,6 +47,7 @@ export default function GameScreen({ mode, onFinish, onQuit }: GameScreenProps) 
     const result = submitAnswer(answer, currentQuestion);
 
     setLastAnswerCorrect(result.isCorrect);
+    setLastCorrectAnswer(currentQuestion.correctAnswer);
     setShowFeedback(true);
 
     setTimeout(() => {
@@ -62,81 +65,55 @@ export default function GameScreen({ mode, onFinish, onQuit }: GameScreenProps) 
 
   const currentQuestion = questions[gameState.currentQuestionIndex];
 
+  // Progress segments
+  const progressSegments = Array.from({ length: questions.length }, (_, i) => {
+    if (i < gameState.currentQuestionIndex) return 'bg-blue-400';
+    if (i === gameState.currentQuestionIndex) return 'bg-blue-400';
+    return 'bg-gray-300';
+  });
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
-      <div className="w-full max-w-3xl bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 border-2 border-white/50">
-        {/* Header Stats */}
-        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div className="flex-shrink-0">
-            <Timer time={formatTime()} />
-          </div>
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-4 sm:px-6 py-2 sm:py-3 rounded-full border-2 border-indigo-100">
-            <span className="text-base sm:text-lg font-black text-indigo-700">
-              {gameState.currentQuestionIndex + 1} / {questions.length}
-            </span>
-          </div>
-          {gameState.lives !== Infinity && (
-            <div className="flex-shrink-0">
-              <LivesIndicator lives={gameState.lives} />
-            </div>
-          )}
-        </div>
-
+    <div className="flex flex-col min-h-screen bg-[#F5F4ED] p-6">
+      <div className="w-full max-w-md mx-auto flex-1 flex flex-col">
         {/* Progress Bar */}
-        <div className="mb-6 sm:mb-8">
-          <ProgressBar
-            current={gameState.currentQuestionIndex + 1}
-            total={questions.length}
-          />
+        <div className="flex gap-1 mb-4">
+          {progressSegments.map((color, i) => (
+            <div key={i} className={`h-2 flex-1 rounded-full ${color}`} />
+          ))}
+          <span className="ml-4 font-mono text-sm">{formatTime()}</span>
         </div>
 
-        {/* Question Display */}
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 border-2 border-indigo-100 shadow-inner">
-          <QuestionDisplay text={currentQuestion.text} />
+        {/* Question */}
+        <div className="flex-1 flex items-center justify-center mb-6">
+          <h1 className="text-4xl font-black text-center leading-tight px-4">
+            {currentQuestion.text}
+          </h1>
         </div>
 
-        {/* Answer Input Section */}
-        <div className="mt-6 sm:mt-8 flex flex-col items-center space-y-4">
-          <AnswerInput
-            onSubmit={handleSubmit}
-            disabled={showFeedback || gameState.status !== 'playing'}
-            showFeedback={showFeedback}
-            isCorrect={lastAnswerCorrect}
-          />
+        {/* Answer Container */}
+        <div className="bg-[#FFDA57] rounded-3xl p-6 border-4 border-white shadow-lg">
+          <div className="mb-4">
+            <AnswerInput
+              onSubmit={handleSubmit}
+              disabled={showFeedback || gameState.status !== 'playing'}
+              showFeedback={showFeedback}
+              isCorrect={lastAnswerCorrect}
+            />
+          </div>
 
           {showFeedback && !lastAnswerCorrect && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-xl px-4 sm:px-6 py-3 sm:py-4 animate-shake">
-              <p className="text-sm sm:text-base text-red-600 text-center">
-                Correct answer: <span className="font-black text-red-700">{currentQuestion.correctAnswer}</span>
+            <div className="bg-white rounded-full px-5 py-3 mb-4">
+              <p className="text-center font-medium">
+                Answer: <span className="font-bold">{lastCorrectAnswer}</span>
               </p>
             </div>
           )}
 
-          {showFeedback && lastAnswerCorrect && (
-            <div className="bg-green-50 border-2 border-green-200 rounded-xl px-4 sm:px-6 py-3 sm:py-4 animate-bounce">
-              <p className="text-sm sm:text-base text-green-600 text-center font-bold">
-                ✅ Correct!
-              </p>
-            </div>
-          )}
-
-          <p className="text-xs sm:text-sm text-gray-500 text-center px-4">
-            💡 Type or select from suggestions • Press <kbd className="px-2 py-1 bg-gray-100 rounded border border-gray-300 text-xs font-mono">Enter</kbd> to submit
-          </p>
-        </div>
-
-        {/* Quit Button */}
-        <div className="mt-6 sm:mt-8 flex justify-center">
           <button
             onClick={onQuit}
-            className="group px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 font-semibold rounded-full transition-all duration-200 border-2 border-gray-200 hover:border-gray-300 active:scale-95"
+            className="w-full bg-[#00917A] text-white font-bold py-4 px-6 rounded-full hover:bg-[#007a68] transition-colors"
           >
-            <span className="flex items-center gap-2">
-              <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-              Back to Menu
-            </span>
+            Back to Menu
           </button>
         </div>
       </div>

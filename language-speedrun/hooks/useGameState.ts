@@ -19,11 +19,17 @@ export interface GameState {
 }
 
 export function useGameState(mode: string, questions: Question[]) {
+  const getLivesForMode = (gameMode: string) => {
+    if (gameMode === 'endless' || gameMode === 'perfect') return 3;
+    if (gameMode === 'zen') return Infinity;
+    return Infinity;
+  };
+
   const [gameState, setGameState] = useState<GameState>({
     status: 'ready',
     currentQuestionIndex: 0,
     answers: [],
-    lives: mode === 'endless' || mode === 'perfect' ? 3 : Infinity,
+    lives: getLivesForMode(mode),
     startTime: null,
     endTime: null
   });
@@ -33,7 +39,7 @@ export function useGameState(mode: string, questions: Question[]) {
       status: 'playing',
       currentQuestionIndex: 0,
       answers: [],
-      lives: mode === 'endless' || mode === 'perfect' ? 3 : Infinity,
+      lives: getLivesForMode(mode),
       startTime: Date.now(),
       endTime: null
     });

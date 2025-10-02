@@ -1,3 +1,5 @@
+import { updateLeaderboard } from './leaderboard';
+
 const STORAGE_KEY = 'langspeed_stats';
 
 export interface ModeStats {
@@ -28,6 +30,10 @@ export interface GameStats {
 
 export function saveScore(mode: string, stats: GameStats): PersonalBests {
   const existing = getPersonalBests();
+
+  // Update leaderboard with score
+  const score = stats.correctCount * 100 + (stats.accuracy === 100 ? 500 : 0);
+  updateLeaderboard(score, stats.totalTime, stats.accuracy);
 
   switch(mode) {
     case 'sprint':

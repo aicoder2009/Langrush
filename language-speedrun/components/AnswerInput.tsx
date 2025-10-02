@@ -74,7 +74,7 @@ export default function AnswerInput({ onSubmit, disabled, showFeedback, isCorrec
   };
 
   return (
-    <div className="relative w-full max-w-md">
+    <div className="relative w-full">
       <input
         ref={inputRef}
         type="text"
@@ -84,14 +84,14 @@ export default function AnswerInput({ onSubmit, disabled, showFeedback, isCorrec
         disabled={disabled}
         placeholder="Type language name..."
         className={`
-          w-full px-6 py-4 text-lg border-2 rounded-lg
-          transition-all duration-200
-          focus:outline-none focus:ring-2
+          w-full px-6 py-4 text-lg font-medium rounded-full bg-white
+          transition-all duration-200 shadow-sm
+          focus:outline-none focus:ring-4 focus:ring-blue-200
           ${showFeedback
             ? isCorrect
-              ? 'border-correct bg-green-50'
-              : 'border-incorrect bg-red-50 shake'
-            : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+              ? 'ring-4 ring-green-400'
+              : 'ring-4 ring-red-400 shake'
+            : ''
           }
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}

@@ -71,58 +71,60 @@ export default function ResultsScreen({ gameData, onPlayAgain, onMenu }: Results
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8">
-        <h1 className="text-4xl font-bold text-center mb-8">
-          Game Complete! 🎉
-        </h1>
+    <div className="flex items-center justify-center min-h-screen bg-[#F5F4ED] p-6">
+      <div className="w-full max-w-md">
+        <div className="bg-[#FFDA57] rounded-3xl p-8 border-4 border-white shadow-lg relative overflow-hidden">
+          {/* Decorative stars */}
+          <div className="absolute top-4 right-4 text-white text-3xl">✦</div>
+          <div className="absolute bottom-4 left-4 text-white text-2xl">✦</div>
 
-        <div className="grid grid-cols-2 gap-6 mb-8">
-          <div className="bg-blue-50 rounded-xl p-6 text-center">
-            <div className="text-sm text-gray-600 mb-2">Time</div>
-            <div className="text-3xl font-bold text-blue-600">{stats.formatTime}</div>
+          <h1 className="text-4xl font-black text-center mb-8">
+            You Scored
+            <br />
+            {stats.accuracy}%!
+          </h1>
+
+          <div className="bg-white rounded-2xl p-6 mb-6">
+            <div className="text-center mb-4">
+              <p className="text-lg font-bold mb-2">
+                {stats.correctCount} / {stats.totalCount} Correct
+              </p>
+              <p className="text-gray-600 font-medium">
+                Time: {stats.formatTime}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-2">
+              {gameData.answers.map((answer, i) => (
+                <span key={i} className="text-2xl">
+                  {answer.isCorrect ? '✅' : '❌'}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="bg-green-50 rounded-xl p-6 text-center">
-            <div className="text-sm text-gray-600 mb-2">Accuracy</div>
-            <div className="text-3xl font-bold text-green-600">{stats.accuracy}%</div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={onPlayAgain}
+              className="w-full bg-black text-white font-bold py-4 px-6 rounded-full hover:bg-gray-900 transition-colors"
+            >
+              Play Again ▶
+            </button>
+
+            <button
+              onClick={handleShare}
+              className="w-full bg-white text-black font-bold py-4 px-6 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              {copied ? '✓ Copied!' : 'Share Results'}
+            </button>
+
+            <button
+              onClick={onMenu}
+              className="w-full bg-[#00917A] text-white font-bold py-4 px-6 rounded-full hover:bg-[#007a68] transition-colors"
+            >
+              Back to Home
+            </button>
           </div>
-        </div>
-
-        <div className="text-center mb-8">
-          <div className="text-xl mb-4">
-            ✅ {stats.correctCount} / {stats.totalCount} correct
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2 mb-6">
-            {gameData.answers.map((answer, i) => (
-              <span key={i} className="text-3xl">
-                {answer.isCorrect ? '✅' : '❌'}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-col space-y-4">
-          <button
-            onClick={handleShare}
-            className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
-          >
-            {copied ? '✓ Copied!' : '📋 Share Results'}
-          </button>
-
-          <button
-            onClick={onPlayAgain}
-            className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
-          >
-            🔄 Play Again
-          </button>
-
-          <button
-            onClick={onMenu}
-            className="w-full py-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl transition-colors"
-          >
-            🏠 Main Menu
-          </button>
         </div>
       </div>
     </div>

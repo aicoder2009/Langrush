@@ -3,12 +3,14 @@ export interface Language {
   name: string;
   acceptableAnswers: string[];
   samples: string[];
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 export const languages: Language[] = [
   {
     code: 'es',
     name: 'Spanish',
+    difficulty: 'easy',
     acceptableAnswers: ['spanish', 'español', 'spa', 'es'],
     samples: [
       'El que mucho abarca, poco aprieta',
@@ -21,6 +23,7 @@ export const languages: Language[] = [
   {
     code: 'fr',
     name: 'French',
+    difficulty: 'easy',
     acceptableAnswers: ['french', 'français', 'francais', 'fra', 'fr'],
     samples: [
       'Bonjour, comment allez-vous?',
@@ -33,6 +36,7 @@ export const languages: Language[] = [
   {
     code: 'de',
     name: 'German',
+    difficulty: 'easy',
     acceptableAnswers: ['german', 'deutsch', 'deu', 'de'],
     samples: [
       'Guten Tag, wie geht es Ihnen?',
@@ -45,6 +49,7 @@ export const languages: Language[] = [
   {
     code: 'ja',
     name: 'Japanese',
+    difficulty: 'medium',
     acceptableAnswers: ['japanese', '日本語', 'jpn', 'ja'],
     samples: [
       'こんにちは、お元気ですか？',
@@ -57,6 +62,7 @@ export const languages: Language[] = [
   {
     code: 'zh',
     name: 'Chinese',
+    difficulty: 'medium',
     acceptableAnswers: ['chinese', 'mandarin', '中文', 'zho', 'zh'],
     samples: [
       '你好，你好吗？',
@@ -69,6 +75,7 @@ export const languages: Language[] = [
   {
     code: 'ko',
     name: 'Korean',
+    difficulty: 'medium',
     acceptableAnswers: ['korean', '한국어', 'kor', 'ko'],
     samples: [
       '안녕하세요, 어떻게 지내세요?',
@@ -81,6 +88,7 @@ export const languages: Language[] = [
   {
     code: 'ar',
     name: 'Arabic',
+    difficulty: 'medium',
     acceptableAnswers: ['arabic', 'العربية', 'ara', 'ar'],
     samples: [
       'مرحبا، كيف حالك؟',
@@ -93,6 +101,7 @@ export const languages: Language[] = [
   {
     code: 'ru',
     name: 'Russian',
+    difficulty: 'medium',
     acceptableAnswers: ['russian', 'русский', 'rus', 'ru'],
     samples: [
       'Здравствуйте, как дела?',
@@ -105,6 +114,7 @@ export const languages: Language[] = [
   {
     code: 'pt',
     name: 'Portuguese',
+    difficulty: 'easy',
     acceptableAnswers: ['portuguese', 'português', 'portugues', 'por', 'pt'],
     samples: [
       'Olá, como você está?',
@@ -117,6 +127,7 @@ export const languages: Language[] = [
   {
     code: 'it',
     name: 'Italian',
+    difficulty: 'easy',
     acceptableAnswers: ['italian', 'italiano', 'ita', 'it'],
     samples: [
       'Ciao, come stai?',
@@ -129,6 +140,7 @@ export const languages: Language[] = [
   {
     code: 'hi',
     name: 'Hindi',
+    difficulty: 'medium',
     acceptableAnswers: ['hindi', 'हिन्दी', 'hin', 'hi'],
     samples: [
       'नमस्ते, आप कैसे हैं?',
@@ -141,6 +153,7 @@ export const languages: Language[] = [
   {
     code: 'nl',
     name: 'Dutch',
+    difficulty: 'easy',
     acceptableAnswers: ['dutch', 'nederlands', 'nld', 'nl'],
     samples: [
       'Hallo, hoe gaat het met je?',

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getPersonalBests, type PersonalBests } from '../services/scoreManager';
+import { getLeaderboard, getCurrentUser, getCurrentStreak, type LeaderboardEntry } from '../services/leaderboard';
 
 interface HomePageProps {
   onSelectMode: (mode: string) => void;
@@ -9,9 +10,16 @@ interface HomePageProps {
 
 export default function HomePage({ onSelectMode }: HomePageProps) {
   const [personalBests, setPersonalBests] = useState<PersonalBests>({});
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [currentUser, setCurrentUser] = useState<string>('');
+  const [currentStreak, setCurrentStreak] = useState<number>(0);
+  const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
 
   useEffect(() => {
     setPersonalBests(getPersonalBests());
+    setLeaderboard(getLeaderboard());
+    setCurrentUser(getCurrentUser());
+    setCurrentStreak(getCurrentStreak());
   }, []);
 
   const formatTime = (ms: number) => {
@@ -26,80 +34,136 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
       id: 'sprint',
       name: 'Sprint',
       icon: '🏃',
-      description: '10 languages as fast as possible',
-      stat: personalBests.sprint?.bestTime
-        ? `Best: ${formatTime(personalBests.sprint.bestTime)}`
-        : 'Not played yet'
+      description: '10 questions'
     },
     {
-      id: 'timeattack',
-      name: 'Time Attack',
-      icon: '⏰',
-      description: '60 seconds, maximum languages',
-      stat: personalBests.timeattack?.highScore
-        ? `Best: ${personalBests.timeattack.highScore} languages`
-        : 'Not played yet'
+      id: 'zen',
+      name: 'Zen',
+      icon: '🧘',
+      description: 'No timer'
     },
     {
       id: 'endless',
       name: 'Endless',
       icon: '♾️',
-      description: 'Keep going until 3 strikes',
-      stat: personalBests.endless?.highScore
-        ? `Best: ${personalBests.endless.highScore} languages`
-        : 'Not played yet'
-    },
-    {
-      id: 'perfect',
-      name: 'Perfect Run',
-      icon: '💎',
-      description: '20 languages, no mistakes',
-      stat: personalBests.perfect?.completions
-        ? `Completed ${personalBests.perfect.completions} times`
-        : 'Not completed'
+      description: '3 lives'
     }
   ];
 
+  const modeColors = {
+    sprint: 'from-orange-400 to-orange-500',
+    zen: 'from-blue-400 to-blue-500',
+    endless: 'from-green-400 to-green-500'
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-5xl">
-        <div className="text-center mb-6">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-2">
-            🌍 Language Sprint
+    <div className="min-h-screen bg-[#F5F4ED] p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center py-8 mb-8">
+          <h1 className="text-6xl font-black italic mb-2">
+            Pick Game
           </h1>
-          <p className="text-base sm:text-lg text-gray-600 mb-2">
-            How fast can you identify languages?
-          </p>
-          <p className="text-sm text-gray-500">
-            Total games: {personalBests.totalGamesPlayed || 0}
-          </p>
+          <h2 className="text-6xl font-black italic text-gray-900">
+            To Play
+          </h2>
+          {currentStreak > 0 && (
+            <div className="mt-4 inline-block text-lg font-bold text-orange-600">
+              🔥 {currentStreak} day streak
+            </div>
+          )}
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        {/* Game Modes Grid */}
+        <div className="grid sm:grid-cols-3 gap-6 mb-12">
           {modes.map((mode) => (
-            <button
+            <div
               key={mode.id}
-              onClick={() => onSelectMode(mode.id)}
-              className="group relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 border-2 border-transparent hover:border-purple-500 overflow-hidden"
+              className={`relative bg-gradient-to-br ${modeColors[mode.id as keyof typeof modeColors]} rounded-3xl p-8 border-4 border-white shadow-lg overflow-hidden`}
             >
-              <div className="relative">
-                <div className="text-5xl sm:text-6xl mb-3">{mode.icon}</div>
-                <h2 className="text-xl sm:text-2xl font-bold mb-2 text-gray-900">{mode.name}</h2>
-                <p className="text-sm sm:text-base text-gray-600 mb-3">{mode.description}</p>
-                <div className="text-xs sm:text-sm font-semibold text-blue-600">
-                  {mode.stat}
+              <div className="relative z-10">
+                <div className="bg-white rounded-full px-6 py-3 inline-block mb-4">
+                  <h3 className="text-2xl font-black">{mode.name}</h3>
                 </div>
-
-                {/* PLAY button overlay */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-purple-500/90 rounded-2xl">
-                  <div className="bg-white text-purple-600 font-black text-xl sm:text-2xl px-6 py-3 rounded-xl shadow-2xl">
-                    ▶ PLAY
-                  </div>
-                </div>
+                <div className="text-7xl mb-4">{mode.icon}</div>
+                <p className="text-white font-medium mb-6">{mode.description}</p>
+                <button
+                  onClick={() => onSelectMode(mode.id)}
+                  className="w-full bg-black text-white font-bold py-4 px-6 rounded-full hover:bg-gray-900 transition-colors flex items-center justify-center gap-2"
+                >
+                  Play Game ▶
+                </button>
               </div>
-            </button>
+              {/* Decorative stars */}
+              <div className="absolute top-4 right-4 text-white text-2xl">✦</div>
+            </div>
           ))}
         </div>
+
+        {/* Leaderboard Toggle */}
+        <div className="text-center mb-8">
+          <button
+            onClick={() => setShowLeaderboard(!showLeaderboard)}
+            className="bg-white px-6 py-3 rounded-full font-bold shadow hover:shadow-md transition-all"
+          >
+            {showLeaderboard ? '▲ Hide' : '▼ View'} Leaderboard
+          </button>
+        </div>
+
+        {/* Leaderboard Section */}
+        {showLeaderboard && (
+          <div className="max-w-md mx-auto mb-12">
+            <div className="bg-yellow-300 rounded-3xl p-6 border-4 border-white shadow-lg">
+              <h2 className="text-2xl font-black text-center mb-6">
+                🏆 Top Players
+              </h2>
+              <div className="space-y-2">
+                {leaderboard.length === 0 ? (
+                  <p className="text-center text-gray-700 py-8">No players yet!</p>
+                ) : (
+                  leaderboard.slice(0, 10).map((entry, index) => (
+                    <div
+                      key={entry.username}
+                      className={`${
+                        entry.username === currentUser
+                          ? 'bg-green-400'
+                          : 'bg-white'
+                      } rounded-full px-5 py-3 flex items-center justify-between`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-black text-gray-900 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-sm">
+                          {String.fromCharCode(65 + index)}
+                        </span>
+                        <span className="font-medium text-gray-900">
+                          {entry.username}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {entry.streak > 0 && (
+                          <span className="text-sm">🔥{entry.streak}</span>
+                        )}
+                        <span className="font-bold text-gray-900">{entry.totalScore}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <footer className="text-center text-sm text-gray-600 pb-6">
+          Made with ❤️ in Arizona 🌵 by{' '}
+          <a
+            href="https://github.com/aicoder2009"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold hover:underline"
+          >
+            Karthick Arun
+          </a>
+        </footer>
       </div>
     </div>
   );

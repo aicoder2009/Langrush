@@ -39,6 +39,7 @@ export default function Home() {
       {screen === 'game' && selectedMode && (
         <GameScreen
           mode={selectedMode}
+          difficulty="medium"
           onFinish={handleGameFinish}
           onQuit={handleReturnToMenu}
         />
