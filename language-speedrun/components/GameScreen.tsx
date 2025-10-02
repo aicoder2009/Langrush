@@ -1,14 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameState } from '../hooks/useGameState';
 import { useTimer } from '../hooks/useTimer';
 import { generateQuestions } from '../services/languageDatabase';
 import { startNewSession, recordRoundTime, getTimeDifference, formatTimeDifference } from '../services/roundTimeTracker';
-import Timer from './Timer';
-import ProgressBar from './ProgressBar';
-import LivesIndicator from './LivesIndicator';
-import QuestionDisplay from './QuestionDisplay';
 import AnswerInput from './AnswerInput';
 
 interface GameScreenProps {
@@ -82,9 +78,9 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isPaused]);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     const penalty = 5;
-    setCurrentScore(Math.max(0, currentScore - penalty));
+    setCurrentScore(prev => prev - penalty); // Allow negative scores
     setComboStreak(0);
 
     // Move to next question
@@ -92,9 +88,9 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
     submitAnswer('', currentQuestion); // Submit empty answer to move forward
 
     setRoundStartTime(Date.now());
-  };
+  }, [currentScore, questions, gameState.currentQuestionIndex, submitAnswer]);
 
-  const handleSubmit = (answer: string) => {
+  const handleSubmit = useCallback((answer: string) => {
     const currentQuestion = questions[gameState.currentQuestionIndex];
     const result = submitAnswer(answer, currentQuestion);
 
@@ -142,7 +138,7 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
       setPreviousRoundTime(null); // Clear comparison after showing
       setTimeComparison(null);
     }, 1500);
-  };
+  }, [questions, gameState.currentQuestionIndex, submitAnswer, roundStartTime, comboStreak, currentScore]);
 
   if (gameState.status === 'ready' || questions.length === 0) {
     return (
@@ -192,11 +188,35 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F4ED] p-6 relative">
       {/* Score Display - Top Left */}
-      <div className="fixed top-6 left-6 z-40">
-        <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full px-6 py-3 border-4 border-white shadow-lg">
+      <div className="fixed top-6 left-6 z-40 flex flex-col gap-3">
+        <div className={`rounded-full px-6 py-3 border-4 border-white shadow-lg transition-all ${
+          currentScore < 0
+            ? 'bg-gradient-to-br from-red-500 to-red-600 animate-pulse'
+            : 'bg-gradient-to-br from-yellow-400 to-yellow-500'
+        }`}>
           <div className="text-center">
-            <div className="text-xs font-bold text-white opacity-90">SCORE</div>
+            <div className="text-xs font-bold text-white opacity-90">
+              {currentScore < 0 ? 'DEBT' : 'SCORE'}
+            </div>
             <div className="text-2xl font-black text-white">{currentScore}</div>
+          </div>
+        </div>
+
+        {/* Keyboard Shortcuts Hint */}
+        <div className="bg-white rounded-2xl px-4 py-3 border-4 border-gray-200 shadow-lg">
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center gap-2">
+              <kbd className="px-2 py-1 bg-gray-800 text-white rounded font-bold text-xs border-2 border-gray-900 shadow-sm min-w-[24px] text-center">
+                P
+              </kbd>
+              <span className="text-gray-700 font-medium">Pause</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <kbd className="px-2 py-1 bg-gray-800 text-white rounded font-bold text-xs border-2 border-gray-900 shadow-sm min-w-[24px] text-center">
+                Esc
+              </kbd>
+              <span className="text-gray-700 font-medium">Toggle</span>
+            </div>
           </div>
         </div>
       </div>

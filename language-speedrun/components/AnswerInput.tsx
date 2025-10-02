@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { getAutocompleteSuggestions } from '../utils/autocomplete';
 import AutocompleteDropdown from './AutocompleteDropdown';
 import { languages, type Language } from '../data/languages';
@@ -12,7 +12,7 @@ interface AnswerInputProps {
   isCorrect: boolean;
 }
 
-export default function AnswerInput({ onSubmit, disabled, showFeedback, isCorrect }: AnswerInputProps) {
+const AnswerInput = memo(({ onSubmit, disabled, showFeedback, isCorrect }: AnswerInputProps) => {
   const [input, setInput] = useState('');
   const [suggestions, setSuggestions] = useState<Language[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -60,18 +60,18 @@ export default function AnswerInput({ onSubmit, disabled, showFeedback, isCorrec
     }
   };
 
-  const handleSubmit = (answer: string) => {
+  const handleSubmit = useCallback((answer: string) => {
     if (!disabled && answer.trim()) {
       onSubmit(answer.trim());
       setInput('');
       setSuggestions([]);
       setSelectedIndex(-1);
     }
-  };
+  }, [disabled, onSubmit]);
 
-  const handleSuggestionClick = (suggestion: Language) => {
+  const handleSuggestionClick = useCallback((suggestion: Language) => {
     handleSubmit(suggestion.name);
-  };
+  }, [handleSubmit]);
 
   return (
     <div className="relative w-full">
@@ -106,4 +106,8 @@ export default function AnswerInput({ onSubmit, disabled, showFeedback, isCorrec
       )}
     </div>
   );
-}
+});
+
+AnswerInput.displayName = 'AnswerInput';
+
+export default AnswerInput;

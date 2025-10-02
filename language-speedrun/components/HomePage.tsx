@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { getPersonalBests, type PersonalBests } from '../services/scoreManager';
 import { getLeaderboard, getCurrentUser, getCurrentStreak, type LeaderboardEntry } from '../services/leaderboard';
 
@@ -8,7 +8,7 @@ interface HomePageProps {
   onSelectMode: (mode: string) => void;
 }
 
-export default function HomePage({ onSelectMode }: HomePageProps) {
+const HomePage = memo(({ onSelectMode }: HomePageProps) => {
   const [personalBests, setPersonalBests] = useState<PersonalBests>({});
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [currentUser, setCurrentUser] = useState<string>('');
@@ -174,4 +174,8 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
       </div>
     </div>
   );
-}
+});
+
+HomePage.displayName = 'HomePage';
+
+export default HomePage;
