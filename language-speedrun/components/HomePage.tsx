@@ -62,44 +62,43 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-4xl">
-        <h1 className="text-6xl font-bold text-center mb-4 text-gray-900">
-          🌍 Language Sprint
-        </h1>
-        <p className="text-xl text-center text-gray-600 mb-12">
-          How fast can you identify languages?
-        </p>
+      <div className="w-full max-w-5xl">
+        <div className="text-center mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-2">
+            🌍 Language Sprint
+          </h1>
+          <p className="text-base sm:text-lg text-gray-600 mb-2">
+            How fast can you identify languages?
+          </p>
+          <p className="text-sm text-gray-500">
+            Total games: {personalBests.totalGamesPlayed || 0}
+          </p>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
           {modes.map((mode) => (
             <button
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 border-2 border-transparent hover:border-purple-500 overflow-hidden"
+              className="group relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 border-2 border-transparent hover:border-purple-500 overflow-hidden"
             >
               <div className="relative">
-                <div className="text-6xl mb-4">{mode.icon}</div>
-                <h2 className="text-2xl font-bold mb-2 text-gray-900">{mode.name}</h2>
-                <p className="text-gray-600 mb-4">{mode.description}</p>
-                <div className="text-sm font-semibold text-blue-600">
+                <div className="text-5xl sm:text-6xl mb-3">{mode.icon}</div>
+                <h2 className="text-xl sm:text-2xl font-bold mb-2 text-gray-900">{mode.name}</h2>
+                <p className="text-sm sm:text-base text-gray-600 mb-3">{mode.description}</p>
+                <div className="text-xs sm:text-sm font-semibold text-blue-600">
                   {mode.stat}
                 </div>
 
                 {/* PLAY button overlay */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-purple-500/90 rounded-2xl">
-                  <div className="bg-white text-purple-600 font-black text-xl sm:text-2xl px-8 py-4 rounded-xl shadow-2xl">
+                  <div className="bg-white text-purple-600 font-black text-xl sm:text-2xl px-6 py-3 rounded-xl shadow-2xl">
                     ▶ PLAY
                   </div>
                 </div>
               </div>
             </button>
           ))}
-        </div>
-
-        <div className="mt-12 text-center">
-          <p className="text-gray-500">
-            Total games played: {personalBests.totalGamesPlayed || 0}
-          </p>
         </div>
       </div>
     </div>
