@@ -37,6 +37,12 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
       description: '10 questions'
     },
     {
+      id: 'timeattack',
+      name: 'Time Attack',
+      icon: '⏱️',
+      description: '60 seconds'
+    },
+    {
       id: 'zen',
       name: 'Zen',
       icon: '🧘',
@@ -52,59 +58,60 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
 
   const modeColors = {
     sprint: 'from-orange-400 to-orange-500',
+    timeattack: 'from-red-400 to-red-500',
     zen: 'from-blue-400 to-blue-500',
     endless: 'from-green-400 to-green-500'
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F4ED] p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-[#F5F4ED] p-4 flex flex-col">
+      <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
         {/* Header */}
-        <div className="text-center py-8 mb-8">
-          <h1 className="text-6xl font-black italic mb-2">
+        <div className="text-center py-4 mb-4">
+          <h1 className="text-4xl sm:text-5xl font-black italic mb-1">
             Pick Game
           </h1>
-          <h2 className="text-6xl font-black italic text-gray-900">
+          <h2 className="text-4xl sm:text-5xl font-black italic text-gray-900">
             To Play
           </h2>
           {currentStreak > 0 && (
-            <div className="mt-4 inline-block text-lg font-bold text-orange-600">
+            <div className="mt-2 inline-block text-base font-bold text-orange-600">
               🔥 {currentStreak} day streak
             </div>
           )}
         </div>
 
         {/* Game Modes Grid */}
-        <div className="grid sm:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {modes.map((mode) => (
             <div
               key={mode.id}
-              className={`relative bg-gradient-to-br ${modeColors[mode.id as keyof typeof modeColors]} rounded-3xl p-8 border-4 border-white shadow-lg overflow-hidden`}
+              className={`relative bg-gradient-to-br ${modeColors[mode.id as keyof typeof modeColors]} rounded-2xl p-4 sm:p-6 border-4 border-white shadow-lg overflow-hidden`}
             >
               <div className="relative z-10">
-                <div className="bg-white rounded-full px-6 py-3 inline-block mb-4">
-                  <h3 className="text-2xl font-black">{mode.name}</h3>
+                <div className="bg-white rounded-full px-3 py-1 sm:px-4 sm:py-2 inline-block mb-2">
+                  <h3 className="text-lg sm:text-xl font-black">{mode.name}</h3>
                 </div>
-                <div className="text-7xl mb-4">{mode.icon}</div>
-                <p className="text-white font-medium mb-6">{mode.description}</p>
+                <div className="text-4xl sm:text-5xl mb-2">{mode.icon}</div>
+                <p className="text-white font-medium text-sm mb-3">{mode.description}</p>
                 <button
                   onClick={() => onSelectMode(mode.id)}
-                  className="w-full bg-black text-white font-bold py-4 px-6 rounded-full hover:bg-gray-900 transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-black text-white font-bold py-2 px-4 text-sm rounded-full hover:bg-gray-900 transition-colors flex items-center justify-center gap-1"
                 >
-                  Play Game ▶
+                  Play ▶
                 </button>
               </div>
               {/* Decorative stars */}
-              <div className="absolute top-4 right-4 text-white text-2xl">✦</div>
+              <div className="absolute top-2 right-2 text-white text-xl">✦</div>
             </div>
           ))}
         </div>
 
         {/* Leaderboard Toggle */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-4">
           <button
             onClick={() => setShowLeaderboard(!showLeaderboard)}
-            className="bg-white px-6 py-3 rounded-full font-bold shadow hover:shadow-md transition-all"
+            className="bg-white px-4 py-2 rounded-full font-bold shadow hover:shadow-md transition-all text-sm"
           >
             {showLeaderboard ? '▲ Hide' : '▼ View'} Leaderboard
           </button>
@@ -112,14 +119,14 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
 
         {/* Leaderboard Section */}
         {showLeaderboard && (
-          <div className="max-w-md mx-auto mb-12">
-            <div className="bg-yellow-300 rounded-3xl p-6 border-4 border-white shadow-lg">
-              <h2 className="text-2xl font-black text-center mb-6">
+          <div className="max-w-2xl mx-auto mb-4">
+            <div className="bg-yellow-300 rounded-2xl p-4 border-4 border-white shadow-lg">
+              <h2 className="text-xl font-black text-center mb-3">
                 🏆 Top Players
               </h2>
-              <div className="space-y-2">
+              <div className="space-y-1 max-h-64 overflow-y-auto">
                 {leaderboard.length === 0 ? (
-                  <p className="text-center text-gray-700 py-8">No players yet!</p>
+                  <p className="text-center text-gray-700 py-4">No players yet!</p>
                 ) : (
                   leaderboard.slice(0, 10).map((entry, index) => (
                     <div
@@ -128,10 +135,10 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
                         entry.username === currentUser
                           ? 'bg-green-400'
                           : 'bg-white'
-                      } rounded-full px-5 py-3 flex items-center justify-between`}
+                      } rounded-full px-3 py-2 flex items-center justify-between text-sm`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="font-black text-gray-900 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-gray-900 w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full text-xs">
                           {String.fromCharCode(65 + index)}
                         </span>
                         <span className="font-medium text-gray-900">
@@ -140,7 +147,7 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
                       </div>
                       <div className="flex items-center gap-2">
                         {entry.streak > 0 && (
-                          <span className="text-sm">🔥{entry.streak}</span>
+                          <span className="text-xs">🔥{entry.streak}</span>
                         )}
                         <span className="font-bold text-gray-900">{entry.totalScore}</span>
                       </div>
@@ -153,7 +160,7 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
         )}
 
         {/* Footer */}
-        <footer className="text-center text-sm text-gray-600 pb-6">
+        <footer className="text-center text-xs text-gray-600 py-3 mt-auto">
           Made with ❤️ in Arizona 🌵 by{' '}
           <a
             href="https://github.com/aicoder2009"

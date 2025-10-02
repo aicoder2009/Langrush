@@ -1,4 +1,5 @@
 import { updateLeaderboard } from './leaderboard';
+import { getCurrentUsername } from './auth';
 
 const STORAGE_KEY = 'langspeed_stats';
 
@@ -100,7 +101,9 @@ export function saveScore(mode: string, stats: GameStats): PersonalBests {
   existing.lastPlayed = new Date().toISOString();
 
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+    const username = getCurrentUsername();
+    const userStorageKey = `${STORAGE_KEY}_${username}`;
+    localStorage.setItem(userStorageKey, JSON.stringify(existing));
   }
   return existing;
 }
@@ -111,7 +114,9 @@ export function getPersonalBests(): PersonalBests {
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const username = getCurrentUsername();
+    const userStorageKey = `${STORAGE_KEY}_${username}`;
+    const stored = localStorage.getItem(userStorageKey);
     return stored ? JSON.parse(stored) : {};
   } catch {
     return {};

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameState } from '../hooks/useGameState';
 import { useTimer } from '../hooks/useTimer';
 import { generateQuestions } from '../services/languageDatabase';
+import { startNewSession, recordRoundTime, getTimeDifference, formatTimeDifference } from '../services/roundTimeTracker';
 import Timer from './Timer';
 import ProgressBar from './ProgressBar';
 import LivesIndicator from './LivesIndicator';
@@ -19,15 +20,35 @@ interface GameScreenProps {
 
 export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameScreenProps) {
   const [questions] = useState(() => generateQuestions(mode, difficulty));
-  const { gameState, startGame, submitAnswer } = useGameState(mode, questions);
+  const { gameState, startGame, submitAnswer, updateTimeRemaining } = useGameState(mode, questions);
   const { time, formatTime } = useTimer(gameState.status === 'playing');
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
   const [lastCorrectAnswer, setLastCorrectAnswer] = useState<string>('');
+  const [previousRoundTime, setPreviousRoundTime] = useState<number | null>(null);
+  const [roundStartTime, setRoundStartTime] = useState<number>(Date.now());
+  const [timeComparison, setTimeComparison] = useState<{ difference: number; isFaster: boolean } | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [currentScore, setCurrentScore] = useState(0);
+  const [comboStreak, setComboStreak] = useState(0);
+  const [showComboAnimation, setShowComboAnimation] = useState(false);
+  const sessionStarted = useRef(false);
 
   useEffect(() => {
+    if (!sessionStarted.current) {
+      startNewSession(mode);
+      sessionStarted.current = true;
+    }
     startGame();
-  }, [startGame]);
+    setRoundStartTime(Date.now());
+  }, [startGame, mode]);
+
+  // Update time remaining for time attack mode
+  useEffect(() => {
+    if (mode === 'timeattack' && gameState.status === 'playing') {
+      updateTimeRemaining(time);
+    }
+  }, [time, mode, gameState.status, updateTimeRemaining]);
 
   useEffect(() => {
     if (gameState.status === 'finished') {
@@ -42,9 +63,74 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
     }
   }, [gameState.status, mode, time, gameState.answers, questions, onFinish]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isPaused) {
+          setIsPaused(false);
+        } else {
+          setIsPaused(true);
+        }
+      }
+      if (e.key === 'p' || e.key === 'P') {
+        setIsPaused(!isPaused);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isPaused]);
+
+  const handleSkip = () => {
+    const penalty = 5;
+    setCurrentScore(Math.max(0, currentScore - penalty));
+    setComboStreak(0);
+
+    // Move to next question
+    const currentQuestion = questions[gameState.currentQuestionIndex];
+    submitAnswer('', currentQuestion); // Submit empty answer to move forward
+
+    setRoundStartTime(Date.now());
+  };
+
   const handleSubmit = (answer: string) => {
     const currentQuestion = questions[gameState.currentQuestionIndex];
     const result = submitAnswer(answer, currentQuestion);
+
+    // Calculate round time
+    const roundTime = Date.now() - roundStartTime;
+
+    // Record this round time
+    recordRoundTime(gameState.currentQuestionIndex, roundTime);
+
+    // Get time comparison with previous round (if applicable)
+    const comparison = getTimeDifference(roundTime, gameState.currentQuestionIndex);
+    if (comparison?.showComparison) {
+      setTimeComparison({
+        difference: comparison.difference,
+        isFaster: comparison.isFaster
+      });
+    }
+
+    setPreviousRoundTime(roundTime);
+
+    // Update score and combo
+    if (result.isCorrect) {
+      const newCombo = comboStreak + 1;
+      setComboStreak(newCombo);
+      const basePoints = 10;
+      const comboBonus = newCombo > 1 ? (newCombo - 1) * 5 : 0;
+      const points = basePoints + comboBonus;
+      setCurrentScore(currentScore + points);
+
+      if (newCombo > 1) {
+        setShowComboAnimation(true);
+        setTimeout(() => setShowComboAnimation(false), 1000);
+      }
+    } else {
+      setComboStreak(0);
+    }
 
     setLastAnswerCorrect(result.isCorrect);
     setLastCorrectAnswer(currentQuestion.correctAnswer);
@@ -52,6 +138,9 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
 
     setTimeout(() => {
       setShowFeedback(false);
+      setRoundStartTime(Date.now()); // Reset for next round
+      setPreviousRoundTime(null); // Clear comparison after showing
+      setTimeComparison(null);
     }, 1500);
   };
 
@@ -72,16 +161,158 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
     return 'bg-gray-300';
   });
 
+  // Format timer display
+  const getTimerDisplay = () => {
+    if (mode === 'timeattack' && gameState.timeRemaining !== undefined) {
+      const seconds = Math.ceil(gameState.timeRemaining / 1000);
+      return `${seconds}s`;
+    }
+    return formatTime();
+  };
+
+  // Determine timer styling based on mode and conditions
+  const getTimerStyle = () => {
+    const baseClasses = 'font-mono font-bold transition-all duration-300';
+
+    if (mode === 'timeattack' && gameState.timeRemaining !== undefined) {
+      const seconds = Math.ceil(gameState.timeRemaining / 1000);
+
+      // Critical warning: less than 10 seconds
+      if (seconds <= 10) {
+        return `${baseClasses} text-3xl text-red-600 animate-pulse`;
+      }
+
+      return `${baseClasses} text-2xl`;
+    }
+
+    // Default timer styling for other modes
+    return `${baseClasses} text-lg`;
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F4ED] p-6">
+    <div className="flex flex-col min-h-screen bg-[#F5F4ED] p-6 relative">
+      {/* Score Display - Top Left */}
+      <div className="fixed top-6 left-6 z-40">
+        <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full px-6 py-3 border-4 border-white shadow-lg">
+          <div className="text-center">
+            <div className="text-xs font-bold text-white opacity-90">SCORE</div>
+            <div className="text-2xl font-black text-white">{currentScore}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Control Bar */}
+      <div className="fixed top-6 right-6 flex gap-3 z-40">
+        {/* Pause/Resume Toggle */}
+        <button
+          onClick={() => setIsPaused(!isPaused)}
+          className="w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center border-2 border-gray-200 hover:border-gray-300"
+          aria-label={isPaused ? "Resume game" : "Pause game"}
+        >
+          {isPaused ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          )}
+        </button>
+
+        {/* Exit Button */}
+        <button
+          onClick={onQuit}
+          className="w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center border-2 border-gray-200 hover:border-gray-300"
+          aria-label="Exit to menu"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      {/* Pause Overlay */}
+      {isPaused && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl p-8 max-w-sm mx-4 text-center">
+            <h2 className="text-3xl font-bold mb-4">Game Paused</h2>
+            <p className="text-gray-600 mb-6">Take a break and resume when ready</p>
+            <button
+              onClick={() => setIsPaused(false)}
+              className="w-full bg-[#00917A] text-white font-bold py-4 px-6 rounded-full hover:bg-[#007a68] transition-colors"
+            >
+              Resume Game
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Correct Answer Feedback Overlay */}
+      {showFeedback && lastAnswerCorrect && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="animate-[scale-in_0.5s_ease-out]">
+            <svg
+              width="200"
+              height="200"
+              viewBox="0 0 200 200"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="drop-shadow-2xl"
+            >
+              {/* Green circle background */}
+              <circle cx="100" cy="100" r="90" fill="#22C55E" className="animate-pulse"/>
+              {/* White checkmark */}
+              <path
+                d="M60 100 L85 125 L140 70"
+                stroke="white"
+                strokeWidth="16"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="animate-[draw_0.5s_ease-out]"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Combo Streak Animation */}
+      {showComboAnimation && comboStreak > 1 && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="animate-[scale-in_0.5s_ease-out]">
+            <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl px-8 py-6 border-4 border-white shadow-2xl">
+              <div className="text-center">
+                <div className="text-6xl font-black text-white mb-2">{comboStreak}x</div>
+                <div className="text-2xl font-bold text-white">COMBO!</div>
+                <div className="text-sm text-white opacity-90 mt-2">+{(comboStreak - 1) * 5} bonus pts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-md mx-auto flex-1 flex flex-col">
         {/* Progress Bar */}
         <div className="flex gap-1 mb-4">
           {progressSegments.map((color, i) => (
             <div key={i} className={`h-2 flex-1 rounded-full ${color}`} />
           ))}
-          <span className="ml-4 font-mono text-sm">{formatTime()}</span>
         </div>
+
+        {/* Timer Display - Prominent (hide for zen mode) */}
+        {mode !== 'zen' && (
+          <div className="text-center mb-6">
+            <div className={`font-black italic ${
+              mode === 'timeattack' && gameState.timeRemaining !== undefined && Math.ceil(gameState.timeRemaining / 1000) <= 10
+                ? 'text-6xl text-red-600 animate-pulse'
+                : 'text-6xl text-gray-900'
+            }`}>
+              {getTimerDisplay()}
+            </div>
+          </div>
+        )}
 
         {/* Question */}
         <div className="flex-1 flex items-center justify-center mb-6">
@@ -109,12 +340,24 @@ export default function GameScreen({ mode, difficulty, onFinish, onQuit }: GameS
             </div>
           )}
 
-          <button
-            onClick={onQuit}
-            className="w-full bg-[#00917A] text-white font-bold py-4 px-6 rounded-full hover:bg-[#007a68] transition-colors"
-          >
-            Back to Menu
-          </button>
+          {/* Time Comparison Display */}
+          {showFeedback && timeComparison && (
+            <div className={`rounded-full px-5 py-3 mb-4 ${timeComparison.isFaster ? 'bg-green-100 border-2 border-green-400' : 'bg-red-100 border-2 border-red-400'}`}>
+              <p className={`text-center font-bold ${timeComparison.isFaster ? 'text-green-700' : 'text-red-700'}`}>
+                {timeComparison.isFaster ? '⚡ Faster' : '🐌 Slower'} by {formatTimeDifference(timeComparison.difference)}
+              </p>
+            </div>
+          )}
+
+          {/* Skip Button */}
+          {!showFeedback && (
+            <button
+              onClick={handleSkip}
+              className="w-full bg-white text-gray-700 font-bold py-3 px-6 rounded-full hover:bg-gray-100 transition-colors border-2 border-gray-300"
+            >
+              Skip (-5 pts)
+            </button>
+          )}
         </div>
       </div>
     </div>

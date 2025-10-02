@@ -9,8 +9,8 @@ const unbounded = Unbounded({
 });
 
 export const metadata: Metadata = {
-  title: "Language Sprint - How fast can you identify languages?",
-  description: "Test your language recognition skills with Language Sprint! Identify languages from text samples across multiple game modes: Sprint, Time Attack, Endless, and Perfect Run. Challenge yourself with 24+ languages.",
+  title: "Linguarush - How fast can you identify languages?",
+  description: "Test your language recognition skills with Linguarush! Identify languages from text samples across multiple game modes: Sprint, Time Attack, Endless, and Perfect Run. Challenge yourself with 24+ languages.",
 };
 
 export default function RootLayout({

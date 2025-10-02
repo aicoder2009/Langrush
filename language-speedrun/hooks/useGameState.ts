@@ -16,6 +16,7 @@ export interface GameState {
   lives: number;
   startTime: number | null;
   endTime: number | null;
+  timeRemaining?: number; // For time attack mode (in milliseconds)
 }
 
 export function useGameState(mode: string, questions: Question[]) {
@@ -31,7 +32,8 @@ export function useGameState(mode: string, questions: Question[]) {
     answers: [],
     lives: getLivesForMode(mode),
     startTime: null,
-    endTime: null
+    endTime: null,
+    timeRemaining: mode === 'timeattack' ? 60000 : undefined // 60 seconds for time attack
   });
 
   const startGame = useCallback(() => {
@@ -41,7 +43,31 @@ export function useGameState(mode: string, questions: Question[]) {
       answers: [],
       lives: getLivesForMode(mode),
       startTime: Date.now(),
-      endTime: null
+      endTime: null,
+      timeRemaining: mode === 'timeattack' ? 60000 : undefined
+    });
+  }, [mode]);
+
+  const updateTimeRemaining = useCallback((timeElapsed: number) => {
+    if (mode !== 'timeattack') return;
+
+    setGameState(prev => {
+      const newTimeRemaining = 60000 - timeElapsed;
+
+      // Check if time has run out
+      if (newTimeRemaining <= 0) {
+        return {
+          ...prev,
+          timeRemaining: 0,
+          status: 'finished',
+          endTime: Date.now()
+        };
+      }
+
+      return {
+        ...prev,
+        timeRemaining: newTimeRemaining
+      };
     });
   }, [mode]);
 
@@ -97,6 +123,7 @@ export function useGameState(mode: string, questions: Question[]) {
     startGame,
     submitAnswer,
     pauseGame,
-    resumeGame
+    resumeGame,
+    updateTimeRemaining
   };
 }
