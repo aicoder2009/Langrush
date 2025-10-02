@@ -47,14 +47,30 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { action, data } = body;
+    const body = await request.json();
+    const { action, data } = body;
+
+    // Input validation
+    if (!action || typeof action !== 'string') {
+      return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
+    }
 
     if (action === 'sign') {
-      // Add new guestbook entry
-      const entry = {
-        username: data.username,
-        timestamp: Date.now()
-      };
+      // Validate username
+      if (!data?.username || typeof data.username !== 'string') {
+        return NextResponse.json({ success: false, error: 'Username is required' }, { status: 400 });
+      }
 
+      const username = data.username.trim();
+      if (username.length < 2 || username.length > 20) {
+        return NextResponse.json({ success: false, error: 'Username must be 2-20 characters' }, { status: 400 });
+      }
+
+      // Sanitize username (remove potentially harmful characters)
+      const sanitizedUsername = username.replace(/[<>\"'&]/g, '');
+      if (sanitizedUsername !== username) {
+        return NextResponse.json({ success: false, error: 'Username contains invalid characters' }, { status: 400 });
+      }
       // Check if username already exists
       const existingIndex = guestbook.findIndex(e => e.username === data.username);
       if (existingIndex >= 0) {
