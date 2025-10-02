@@ -14,6 +14,18 @@ const STREAK_KEY = 'language-sprint-streak';
 
 export function getCurrentUser(): string {
   if (typeof window === 'undefined') return 'Anonymous';
+
+  // Import auth service dynamically to avoid circular dependencies
+  try {
+    const authData = localStorage.getItem('language-sprint-auth');
+    if (authData) {
+      const auth = JSON.parse(authData);
+      return auth.username || 'Anonymous';
+    }
+  } catch (e) {
+    // Fall back to legacy user key
+  }
+
   const stored = localStorage.getItem(CURRENT_USER_KEY);
   if (!stored) {
     const username = `Player${Math.floor(Math.random() * 10000)}`;

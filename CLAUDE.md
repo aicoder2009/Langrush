@@ -1,1 +1,1 @@
-- the github repo for this project is aicoder2009/Langrush and github CLI is alreayd on here and is connected to this folder for the project your job is to also manage the github versioning pushing pulling and fetching and all that stuff
+- the github repo for this project is aicoder2009/Linguarush and github CLI is alreayd on here and is connected to this folder for the project your job is to also manage the github versioning pushing pulling and fetching and all that stuff
