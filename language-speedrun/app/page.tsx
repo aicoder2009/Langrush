@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react';
 import { isLoggedIn } from '../services/auth';
 import AuthScreen from '../components/AuthScreen';
-import GuestModePrompt from '../components/GuestModePrompt';
 import HomePage from '../components/HomePage';
 import GameScreen from '../components/GameScreen';
 import ResultsScreen from '../components/ResultsScreen';
 
 export default function Home() {
-  const [screen, setScreen] = useState<'auth' | 'guest' | 'home' | 'game' | 'results'>('auth');
+  const [screen, setScreen] = useState<'auth' | 'home' | 'game' | 'results'>('auth');
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const [showDifficultyOverlay, setShowDifficultyOverlay] = useState(false);
@@ -52,31 +51,11 @@ export default function Home() {
     setScreen('home');
   };
 
-  const handleGuestMode = () => {
-    setScreen('guest');
-  };
-
-  const handleGuestCreated = () => {
-    setScreen('home');
-  };
-
-  const handleBackToAuth = () => {
-    setScreen('auth');
-  };
-
   return (
     <>
       {screen === 'auth' && (
         <AuthScreen
           onAuthenticated={handleAuthenticated}
-          onGuestMode={handleGuestMode}
-        />
-      )}
-
-      {screen === 'guest' && (
-        <GuestModePrompt
-          onGuestCreated={handleGuestCreated}
-          onBack={handleBackToAuth}
         />
       )}
 
