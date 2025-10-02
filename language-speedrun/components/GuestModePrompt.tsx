@@ -13,12 +13,12 @@ export default function GuestModePrompt({ onGuestCreated, onBack }: GuestModePro
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const result = createGuestUser(tempUsername);
+    const result = await createGuestUser(tempUsername);
     setLoading(false);
 
     if (result.success) {
@@ -42,7 +42,7 @@ export default function GuestModePrompt({ onGuestCreated, onBack }: GuestModePro
           </h3>
 
           <p className="text-center mb-6 font-medium">
-            Your progress won't be saved permanently
+            Your progress won&apos;t be saved permanently
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

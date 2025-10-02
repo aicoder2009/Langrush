@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, memo, useCallback } from 'react';
-import { getPersonalBests, type PersonalBests } from '../services/scoreManager';
+import { useState, useEffect, memo } from 'react';
 import { getLeaderboard, getCurrentUser, getCurrentStreak, type LeaderboardEntry } from '../services/leaderboard';
 
 interface HomePageProps {
@@ -9,25 +8,16 @@ interface HomePageProps {
 }
 
 const HomePage = memo(({ onSelectMode }: HomePageProps) => {
-  const [personalBests, setPersonalBests] = useState<PersonalBests>({});
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [currentUser, setCurrentUser] = useState<string>('');
   const [currentStreak, setCurrentStreak] = useState<number>(0);
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
 
   useEffect(() => {
-    setPersonalBests(getPersonalBests());
     setLeaderboard(getLeaderboard());
     setCurrentUser(getCurrentUser());
     setCurrentStreak(getCurrentStreak());
   }, []);
-
-  const formatTime = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
 
   const modes = [
     {

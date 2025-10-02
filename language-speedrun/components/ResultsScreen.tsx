@@ -56,20 +56,6 @@ export default function ResultsScreen({ gameData, onPlayAgain, onMenu }: Results
 
   if (!stats) return null;
 
-  const getPerformanceEmoji = () => {
-    if (stats.accuracy === 100) return '🏆';
-    if (stats.accuracy >= 80) return '🌟';
-    if (stats.accuracy >= 60) return '👍';
-    return '💪';
-  };
-
-  const getPerformanceMessage = () => {
-    if (stats.accuracy === 100) return 'Perfect Score!';
-    if (stats.accuracy >= 80) return 'Excellent Work!';
-    if (stats.accuracy >= 60) return 'Good Job!';
-    return 'Keep Practicing!';
-  };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#F5F4ED] p-6">
       <div className="w-full max-w-md">
