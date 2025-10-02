@@ -94,90 +94,91 @@ export default function ResultsScreen({ gameData, onPlayAgain, onMenu }: Results
             </p>
           </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-4 sm:p-6 text-center border-2 border-blue-200 shadow-lg transform hover:scale-105 transition-transform">
-            <div className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2 font-semibold">⏱️ Time</div>
-            <div className="text-2xl sm:text-3xl md:text-4xl font-black text-blue-600">{stats.formatTime}</div>
-          </div>
-          <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-4 sm:p-6 text-center border-2 border-green-200 shadow-lg transform hover:scale-105 transition-transform">
-            <div className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2 font-semibold">🎯 Accuracy</div>
-            <div className="text-2xl sm:text-3xl md:text-4xl font-black text-green-600">{stats.accuracy}%</div>
-          </div>
-        </div>
-
-        {/* Score Summary */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-purple-200">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
-              ✅ {stats.correctCount} / {stats.totalCount} correct answers
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-6 text-center border-2 border-blue-400 shadow-lg transform hover:scale-105 transition-transform">
+              <div className="text-xs sm:text-sm text-blue-200 mb-1 sm:mb-2 font-semibold">⏱️ TIME</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black text-white">{stats.formatTime}</div>
             </div>
-
-            {/* Answer Grid */}
-            <div className="flex flex-wrap justify-center gap-1 sm:gap-2">
-              {gameData.answers.map((answer, i) => (
-                <div
-                  key={i}
-                  className={`text-2xl sm:text-3xl md:text-4xl transform hover:scale-125 transition-transform ${
-                    answer.isCorrect ? 'animate-bounce' : ''
-                  }`}
-                  style={{ animationDelay: `${i * 50}ms`, animationDuration: '1s' }}
-                >
-                  {answer.isCorrect ? '✅' : '❌'}
-                </div>
-              ))}
+            <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-2xl p-4 sm:p-6 text-center border-2 border-green-400 shadow-lg transform hover:scale-105 transition-transform">
+              <div className="text-xs sm:text-sm text-green-200 mb-1 sm:mb-2 font-semibold">🎯 ACCURACY</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black text-white">{stats.accuracy}%</div>
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <button
-            onClick={handleShare}
-            className="group w-full py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold text-sm sm:text-base rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95 border-2 border-blue-400"
-          >
-            <span className="flex items-center justify-center gap-2">
-              {copied ? (
-                <>
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Copied to Clipboard!
-                </>
-              ) : (
-                <>
-                  📋 Share Results
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                  </svg>
-                </>
-              )}
-            </span>
-          </button>
+          {/* Score Summary */}
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-yellow-400/30">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-400 mb-3 sm:mb-4 uppercase tracking-wide">
+                ✅ {stats.correctCount} / {stats.totalCount} CORRECT
+              </div>
 
-          <button
-            onClick={onPlayAgain}
-            className="group w-full py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-sm sm:text-base rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95 border-2 border-green-400"
-          >
-            <span className="flex items-center justify-center gap-2">
-              🔄 Play Again
-              <svg className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-              </svg>
-            </span>
-          </button>
+              {/* Answer Grid */}
+              <div className="flex flex-wrap justify-center gap-1 sm:gap-2">
+                {gameData.answers.map((answer, i) => (
+                  <div
+                    key={i}
+                    className={`text-2xl sm:text-3xl md:text-4xl transform hover:scale-125 transition-transform ${
+                      answer.isCorrect ? 'animate-bounce' : ''
+                    }`}
+                    style={{ animationDelay: `${i * 50}ms`, animationDuration: '1s' }}
+                  >
+                    {answer.isCorrect ? '✅' : '❌'}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
-          <button
-            onClick={onMenu}
-            className="group w-full py-3 sm:py-4 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 font-bold text-sm sm:text-base rounded-2xl transition-all duration-200 border-2 border-gray-300 hover:border-gray-400 active:scale-95"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-              </svg>
-              Main Menu
-            </span>
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <button
+              onClick={handleShare}
+              className="group w-full py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold text-sm sm:text-base rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95 border-2 border-blue-400"
+            >
+              <span className="flex items-center justify-center gap-2">
+                {copied ? (
+                  <>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Copied to Clipboard!
+                  </>
+                ) : (
+                  <>
+                    📋 Share Results
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                    </svg>
+                  </>
+                )}
+              </span>
+            </button>
+
+            <button
+              onClick={onPlayAgain}
+              className="group w-full py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-sm sm:text-base rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95 border-2 border-green-400"
+            >
+              <span className="flex items-center justify-center gap-2">
+                🔄 Play Again
+                <svg className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+              </span>
+            </button>
+
+            <button
+              onClick={onMenu}
+              className="group w-full py-3 sm:py-4 bg-black/50 hover:bg-black/70 text-yellow-400 hover:text-yellow-300 font-bold text-sm sm:text-base rounded-2xl transition-all duration-200 border-2 border-yellow-400/50 hover:border-yellow-400 active:scale-95"
+            >
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                </svg>
+                MAIN MENU
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
