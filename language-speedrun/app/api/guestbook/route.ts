@@ -1,10 +1,4 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-// Temporary file-based storage for development
-// For Vercel production, replace with Vercel KV, Postgres, or other database
-const DATA_FILE = path.join(process.cwd(), 'data', 'guestbook.json');
 
 interface GuestbookEntry {
   username: string;
@@ -19,18 +13,19 @@ interface ScoreEntry {
   timestamp: number;
 }
 
+// In-memory storage for serverless environment
+// Note: This resets on each deployment. For persistent storage, use Vercel KV, Postgres, or similar
+let memoryStore: { guestbook: GuestbookEntry[]; scores: ScoreEntry[] } = {
+  guestbook: [],
+  scores: []
+};
+
 async function loadData(): Promise<{ guestbook: GuestbookEntry[]; scores: ScoreEntry[] }> {
-  try {
-    const data = await fs.readFile(DATA_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return { guestbook: [], scores: [] };
-  }
+  return memoryStore;
 }
 
 async function saveData(data: { guestbook: GuestbookEntry[]; scores: ScoreEntry[] }): Promise<void> {
-  await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
+  memoryStore = data;
 }
 
 export async function GET() {
