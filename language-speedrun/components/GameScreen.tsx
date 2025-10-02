@@ -54,8 +54,8 @@ export default function GameScreen({ mode, onFinish, onQuit }: GameScreenProps) 
 
   if (gameState.status === 'ready' || questions.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
-        <div className="text-2xl sm:text-3xl text-white font-bold animate-pulse">Loading game...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-2xl sm:text-3xl text-gray-800 font-bold animate-pulse">Loading game...</div>
       </div>
     );
   }
@@ -63,7 +63,7 @@ export default function GameScreen({ mode, onFinish, onQuit }: GameScreenProps) 
   const currentQuestion = questions[gameState.currentQuestionIndex];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-3 sm:p-4 md:p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
       <div className="w-full max-w-3xl bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 border-2 border-white/50">
         {/* Header Stats */}
         <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">

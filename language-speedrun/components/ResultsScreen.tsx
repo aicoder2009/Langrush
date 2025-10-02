@@ -71,20 +71,28 @@ export default function ResultsScreen({ gameData, onPlayAgain, onMenu }: Results
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-3 sm:p-4 md:p-6">
-      <div className="w-full max-w-3xl bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-4 sm:p-6 md:p-10 border-2 border-white/50">
-        {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="text-6xl sm:text-7xl md:text-8xl mb-4 animate-bounce">
-            {getPerformanceEmoji()}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-3 sm:p-4 md:p-6 relative overflow-hidden">
+      {/* Animated background celebration */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-10 left-10 w-96 h-96 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl animate-blob" />
+        <div className="absolute top-20 right-10 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000" />
+        <div className="absolute bottom-10 left-1/3 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000" />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <div className="w-full max-w-4xl bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl shadow-yellow-500/30 p-6 sm:p-8 md:p-12 border-4 border-yellow-400/40">
+          {/* Header */}
+          <div className="text-center mb-8 sm:mb-10">
+            <div className="text-7xl sm:text-8xl md:text-9xl mb-6 animate-bounce drop-shadow-2xl">
+              {getPerformanceEmoji()}
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 mb-3 uppercase tracking-wider drop-shadow-lg">
+              {getPerformanceMessage()}
+            </h1>
+            <p className="text-lg sm:text-xl text-yellow-400 font-black uppercase tracking-widest">
+              🏆 MISSION COMPLETE 🏆
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-2">
-            {getPerformanceMessage()}
-          </h1>
-          <p className="text-base sm:text-lg text-gray-600 font-medium">
-            Game Complete
-          </p>
-        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">

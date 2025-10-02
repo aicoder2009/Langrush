@@ -61,79 +61,91 @@ export default function HomePage({ onSelectMode }: HomePageProps) {
   ];
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-5xl">
-        {/* Header Section */}
-        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
-          <div className="inline-block bg-white/10 backdrop-blur-md rounded-3xl px-6 py-3 mb-6 border border-white/20">
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white drop-shadow-lg">
-              🌍 Language Sprint
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 sm:p-6 md:p-8 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-blob" />
+        <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000" />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <div className="w-full max-w-6xl">
+          {/* Header Section */}
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="mb-6">
+              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 drop-shadow-2xl mb-4 animate-pulse">
+                LANGRUSH
+              </h1>
+              <div className="flex items-center justify-center gap-4 text-yellow-400 text-xl sm:text-2xl md:text-3xl font-black">
+                <span className="animate-bounce">⚡</span>
+                <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-transparent bg-clip-text">SPEEDRUN CHALLENGE</span>
+                <span className="animate-bounce animation-delay-150">⚡</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <div className="bg-black/40 backdrop-blur-md border-2 border-yellow-400/50 px-6 py-3 rounded-2xl shadow-lg shadow-yellow-400/20">
+                <span className="text-yellow-400 font-black text-lg">🎮 {personalBests.totalGamesPlayed || 0} GAMES</span>
+              </div>
+            </div>
           </div>
-          <p className="text-lg sm:text-xl md:text-2xl text-white/90 font-medium drop-shadow-md px-4">
-            How fast can you identify languages?
-          </p>
-          <div className="mt-4 flex items-center justify-center gap-3 text-white/80 text-sm sm:text-base">
-            <span className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-              📊 {personalBests.totalGamesPlayed || 0} games played
-            </span>
-          </div>
-        </div>
 
-        {/* Game Modes Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 md:gap-6 mb-8">
-          {modes.map((mode, index) => (
-            <button
-              key={mode.id}
-              onClick={() => onSelectMode(mode.id)}
-              className="group relative bg-white/95 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-2xl hover:shadow-3xl transform hover:scale-105 hover:-translate-y-2 transition-all duration-300 border-2 border-white/50 hover:border-white active:scale-95"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Gradient overlay on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 rounded-3xl transition-all duration-300" />
+          {/* Game Modes Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 md:gap-8">
+            {modes.map((mode, index) => (
+              <button
+                key={mode.id}
+                onClick={() => onSelectMode(mode.id)}
+                className="group relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl hover:shadow-yellow-500/50 transform hover:scale-105 transition-all duration-300 border-4 border-yellow-400/20 hover:border-yellow-400 active:scale-95 overflow-hidden"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {/* Glowing effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/0 via-pink-500/0 to-purple-500/0 group-hover:from-yellow-400/20 group-hover:via-pink-500/20 group-hover:to-purple-500/20 rounded-3xl transition-all duration-500" />
 
-              <div className="relative">
-                {/* Icon */}
-                <div className="text-6xl sm:text-7xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
-                  {mode.icon}
-                </div>
+                {/* Corner accent */}
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-400/20 to-transparent rounded-bl-full" />
 
-                {/* Title */}
-                <h2 className="text-2xl sm:text-3xl font-black mb-3 text-gray-800 group-hover:text-indigo-600 transition-colors">
-                  {mode.name}
-                </h2>
+                <div className="relative">
+                  {/* Icon */}
+                  <div className="text-7xl sm:text-8xl mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 filter drop-shadow-lg">
+                    {mode.icon}
+                  </div>
 
-                {/* Description */}
-                <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
-                  {mode.description}
-                </p>
+                  {/* Title */}
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 uppercase tracking-wider">
+                    {mode.name}
+                  </h2>
 
-                {/* Stats Badge */}
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-2 rounded-full border border-indigo-100">
-                  <span className="text-xs sm:text-sm font-bold text-indigo-700">
-                    {mode.stat}
-                  </span>
-                </div>
+                  {/* Description */}
+                  <p className="text-sm sm:text-base text-gray-300 mb-4 font-bold uppercase tracking-wide">
+                    {mode.description}
+                  </p>
 
-                {/* Play arrow indicator */}
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="bg-indigo-500 text-white rounded-full p-2 shadow-lg">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
+                  {/* Stats Badge */}
+                  <div className="inline-flex items-center gap-2 bg-black/50 px-4 py-2 rounded-xl border-2 border-yellow-400/30 backdrop-blur-sm">
+                    <span className="text-xs sm:text-sm font-black text-yellow-400 uppercase">
+                      {mode.stat}
+                    </span>
+                  </div>
+
+                  {/* PLAY button overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 rounded-3xl">
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl sm:text-2xl px-8 py-4 rounded-2xl shadow-2xl transform scale-110 animate-pulse">
+                      ▶ PLAY
+                    </div>
                   </div>
                 </div>
-              </div>
-            </button>
-          ))}
-        </div>
+              </button>
+            ))}
+          </div>
 
-        {/* Footer Info */}
-        <div className="text-center space-y-3">
-          <div className="inline-block bg-white/10 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/20">
-            <p className="text-white/90 text-sm sm:text-base font-medium">
-              🎯 Choose a mode to start your language challenge!
-            </p>
+          {/* Footer CTA */}
+          <div className="text-center mt-12">
+            <div className="inline-block bg-black/40 backdrop-blur-md rounded-3xl px-8 py-4 border-2 border-yellow-400/50 shadow-lg shadow-yellow-400/20">
+              <p className="text-yellow-400 text-base sm:text-lg font-black uppercase tracking-wider">
+                🏆 SELECT YOUR CHALLENGE 🏆
+              </p>
+            </div>
           </div>
         </div>
       </div>
