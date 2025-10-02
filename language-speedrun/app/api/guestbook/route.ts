@@ -1,9 +1,40 @@
 import { NextResponse } from 'next/server';
 
 // In-memory storage for now (will be replaced with a database in production)
-// For Vercel, you can use Vercel KV, Postgres, or any other database
-let guestbook: { username: string; timestamp: number }[] = [];
-let scores: { username: string; mode: string; score: number; time: number; timestamp: number }[] = [];
+// Use environment variables or a proper database for production
+// For development, consider using a file-based storage or external service
+import { promises as fs } from 'fs';
+import path from 'path';
+
+// Temporary file-based storage for development
+const DATA_FILE = path.join(process.cwd(), 'data', 'guestbook.json');
+
+interface GuestbookEntry {
+  username: string;
+  timestamp: number;
+}
+
+interface ScoreEntry {
+  username: string;
+  mode: string;
+  score: number;
+  time: number;
+  timestamp: number;
+}
+
+async function loadData(): Promise<{ guestbook: GuestbookEntry[]; scores: ScoreEntry[] }> {
+  try {
+    const data = await fs.readFile(DATA_FILE, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return { guestbook: [], scores: [] };
+  }
+}
+
+async function saveData(data: { guestbook: GuestbookEntry[]; scores: ScoreEntry[] }): Promise<void> {
+  await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
+  await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
+}
 
 export async function GET() {
   return NextResponse.json({
